@@ -1,0 +1,653 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite-amalgamation-3450300\shell.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite-amalgamation-3450300\sqlite3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sqlite-amalgamation-3450300\sqlite3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite-amalgamation-3450300\sqlite3ext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".vs\steady state\v17\workspaceFileList.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40BRNDSHUNT-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B69R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B70H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#BP6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#C28R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D12P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D14S-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D54N-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D83W-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#E93L-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#F27P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G37C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G8P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G9F-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#MR11-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#N56C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#P81C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#R25Y-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#R7B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#SPC#GREATPLAINSGENERATION-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#V38R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P11#SPC#BD#5-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P11#SPC#BD#6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#A6V#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#B69R#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#B70H#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#F10M#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G1A#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G1A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G2A#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G2A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G9F#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#M39V#V57R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#P58C#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#R7B#R29H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#V38R#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#V57R#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#A1B#A2B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#BP6#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#CW8#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#E2B#E2C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40System-Intact-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40BRNDSHUNT-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B69R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B70H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#BP6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#C28R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D12P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D14S-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D54N-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D83W-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#E93L-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#F27P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G37C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G8P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G9F-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#MR11-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#N56C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#P81C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#R25Y-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#R7B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#SPC#GREATPLAINSGENERATION-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#V38R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P11#SPC#BD#5-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P11#SPC#BD#6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#A6V#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#B69R#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#B70H#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#F10M#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G1A#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G1A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G2A#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G2A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G9F#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#M39V#V57R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#P58C#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#R7B#R29H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#V38R#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#V57R#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#A1B#A2B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#BP6#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#CW8#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#E2B#E2C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LG%40System-Intact-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40BRNDSHUNT-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B69R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B70H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#BP6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#C28R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D12P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D14S-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D54N-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D83W-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#E93L-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#F27P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G37C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G8P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G9F-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#MR11-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#N56C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#P81C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#R25Y-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#R7B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#SPC#GREATPLAINSGENERATION-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#V38R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P11#SPC#BD#5-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P11#SPC#BD#6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#A6V#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#B69R#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#B70H#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#F10M#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G1A#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G1A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G2A#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G2A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G9F#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#M39V#V57R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#P58C#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#R7B#R29H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#V38R#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#V57R#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#A1B#A2B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#BP6#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#CW8#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#E2B#E2C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40System-Intact-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40BRNDSHUNT-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B69R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B70H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#BP6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#C28R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D12P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D14S-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D54N-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D83W-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#E93L-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#F27P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G37C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G8P-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G9F-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#MR11-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#N56C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#P81C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#R25Y-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#R7B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#SPC#GREATPLAINSGENERATION-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#V38R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P11#SPC#BD#5-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P11#SPC#BD#6-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#A6V#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#B69R#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#B70H#B71T-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#F10M#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G1A#U91A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G1A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G2A#A4D-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G2A-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G9F#G31V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#M39V#V57R-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#P58C#P52E-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#R7B#R29H-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#V38R#M39V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#V57R#A6V-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#A1B#A2B-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#BP6#BP7-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#CW8#CN9-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#E2B#E2C-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40System-Intact-branch.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

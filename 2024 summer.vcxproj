@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{4B27021B-B85E-4DEE-A225-BB9B375B7D17}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="sqlite-amalgamation-3450300\shell.c" />
+    <ClCompile Include="sqlite-amalgamation-3450300\sqlite3.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sqlite-amalgamation-3450300\sqlite3.h" />
+    <ClInclude Include="sqlite-amalgamation-3450300\sqlite3ext.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".vs\steady state\v17\workspaceFileList.bin" />
+    <None Include="contacts.csv" />
+    <None Include="packages.config" />
+    <None Include="sql.sql" />
+    <None Include="thermalbranch\Base-sum2030-LG%40BRNDSHUNT-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B69R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B70H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#BP6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#C28R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D12P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D14S-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D54N-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#D83W-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#E93L-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#F27P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G37C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G8P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#G9F-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#MR11-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#N56C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#P81C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#R25Y-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#R7B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#SPC#GREATPLAINSGENERATION-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P1#V38R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P11#SPC#BD#5-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P11#SPC#BD#6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#A6V#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#B69R#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#B70H#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#F10M#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G1A#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G1A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G2A#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G2A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#G9F#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#M39V#V57R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#P58C#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#R7B#R29H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#V38R#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P4#V57R#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#A1B#A2B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#BP6#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#CW8#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40P7#E2B#E2C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG%40System-Intact-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40BRNDSHUNT-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B69R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B70H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#BP6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#C28R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D12P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D14S-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D54N-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#D83W-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#E93L-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#F27P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G37C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G8P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#G9F-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#MR11-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#N56C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#P81C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#R25Y-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#R7B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#SPC#GREATPLAINSGENERATION-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P1#V38R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P11#SPC#BD#5-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P11#SPC#BD#6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#A6V#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#B69R#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#B70H#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#F10M#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G1A#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G1A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G2A#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G2A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#G9F#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#M39V#V57R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#P58C#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#R7B#R29H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#V38R#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P4#V57R#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#A1B#A2B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#BP6#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#CW8#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40P7#E2B#E2C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LG-islnd0%40System-Intact-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40BRNDSHUNT-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B69R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B70H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#BP6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#C28R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D12P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D14S-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D54N-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#D83W-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#E93L-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#F27P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G37C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G8P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#G9F-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#MR11-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#N56C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#P81C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#R25Y-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#R7B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#SPC#GREATPLAINSGENERATION-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P1#V38R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P11#SPC#BD#5-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P11#SPC#BD#6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#A6V#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#B69R#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#B70H#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#F10M#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G1A#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G1A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G2A#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G2A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#G9F#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#M39V#V57R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#P58C#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#R7B#R29H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#V38R#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P4#V57R#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#A1B#A2B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#BP6#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#CW8#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40P7#E2B#E2C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH%40System-Intact-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40BRNDSHUNT-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B69R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B70H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#BP6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#C28R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D12P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D14S-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D54N-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#D83W-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#E93L-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#F27P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G37C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G8P-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#G9F-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#MR11-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#N56C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#P81C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#R25Y-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#R7B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#SPC#GREATPLAINSGENERATION-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P1#V38R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P11#SPC#BD#5-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P11#SPC#BD#6-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#A6V#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#B69R#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#B70H#B71T-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#F10M#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G1A#U91A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G1A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G2A#A4D-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G2A-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#G9F#G31V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#M39V#V57R-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#P58C#P52E-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#R7B#R29H-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#V38R#M39V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P4#V57R#A6V-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#A1B#A2B-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#BP6#BP7-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#CW8#CN9-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40P7#E2B#E2C-branch.bin" />
+    <None Include="thermalbranch\Base-sum2030-LGspcHH-islnd0%40System-Intact-branch.bin" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
