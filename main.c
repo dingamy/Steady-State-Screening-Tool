@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
     
     
-    char* file = "database.db"; /* default to temp db */
+    char* file = "database.db";
     sqlite3 *db = NULL;
     int rc = 0;
     sqlite3_initialize();
@@ -20,9 +20,37 @@ int main(int argc, char* argv[]) {
         sqlite3_close(db);
         exit(-1);
     }
+    // DROPS EXISTING TABLE contingency
+    sqlite3_stmt* stmt = NULL;
+    rc = sqlite3_prepare_v2(db, "DROP TABLE IF EXISTS contingency;", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        printf("not ok2\n");
+        sqlite3_close(db);
+        exit(-1);
+    }
+    rc = sqlite3_step(stmt);
+    while (rc != SQLITE_DONE) {
+        printf("error\n");
+        return -1;
+    }
+    sqlite3_finalize(stmt);
 
- 
+    // CREATES NEW TABLE contingency
+    stmt = NULL;
+    rc = sqlite3_prepare_v2(db, "CREATE TABLE contingency (`contingency name` text NOT NULL, `NERC category` text);", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        printf("not ok2\n");
+        sqlite3_close(db);
+        exit(-1);
+    }
+    rc = sqlite3_step(stmt);
+    while (rc != SQLITE_DONE) {
+        printf("error\n");
+        return -1;
+    }
+    sqlite3_finalize(stmt);
 
+	// INSERTING VALUES INTO TABLE contingency
     int count = 0;
     DIR* d;
 	struct dirent* dir;
@@ -32,39 +60,22 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
     while ((dir = readdir(d)) != NULL) {
-		//printf("%s\n", dir->d_name);
+
 		if (strstr(dir->d_name, ".csv") != NULL) {
-			/*printf("found csv\n");*/
             printf("%s\n", dir->d_name);
-			/*char* filename1 = dir->d_name;
-			printf("FILE NAME % s\n", filename1);
-            char* filename = malloc(strlen("C:\\Users\\ading\\Downloads\\Project\\BasePrep-sum2025spcHH-LG@amy#dingBRNDGEN5-gen.csv") + 1);*/
             char* filename = dir->d_name;
-            /*if (filename == NULL) {
-                printf("malloc failed\n");
-                return -1;
-            }
-            strcpy(filename, "C:\\Users\\ading\\Downloads\\Project\\BasePrep-sum2025spcHH-LG@amy#dingBRNDGEN5-gen.csv");
-            */
-           
-           /* printf("%s\n", filename);*/
-
-
             char* contingency;
             char* category = NULL;
             char* nextToken;
-            contingency = strtok_s(filename, "@", &nextToken); /* get the first token */
-
-            contingency = strtok_s(NULL, "@", &nextToken); /* get the second part of the string */
+            contingency = strtok_s(filename, "@", &nextToken); 
+            contingency = strtok_s(NULL, "@", &nextToken);
             contingency = strtok_s(contingency, "-", &nextToken);
 
             if (strstr(contingency, "#") != NULL) {
                 category = strtok_s(contingency, "#", &nextToken);
                 contingency = strtok_s(NULL, "#", &nextToken);
             }
-            //printf(" %s\n", contingency);
-            //printf(" %s\n", category);
-            
+     
             size_t needed = snprintf(NULL, 0, "INSERT INTO contingency (`contingency name`, `NERC category`) VALUES ('%s', '%s');", contingency, category) + 1;
             char* sql_str = malloc(needed);
             if (sql_str == NULL) {
@@ -80,26 +91,26 @@ int main(int argc, char* argv[]) {
                 printf("%s\n", sql_str);
             }
 
-            sqlite3_stmt* stmt = NULL;
+            stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
             if (rc != SQLITE_OK) {
                 printf("not ok2\n");
                 sqlite3_close(db);
                 exit(-1);
             }
-    /*        printf("ok2\n");*/
-            while (sqlite3_step(stmt) == SQLITE_ROW) {
-                continue;
+
+            rc = sqlite3_step(stmt);
+            while (rc != SQLITE_DONE) {
+                printf("error\n");
+                return -1;
             }
 
             printf("done\n");
             count++;
             sqlite3_finalize(stmt);
-
             free(sql_str);
 		}
     }
-    printf("donedone\n");
 	printf("count: %d\n", count);
     sqlite3_close(db);
     sqlite3_shutdown();
