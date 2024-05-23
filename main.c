@@ -5,10 +5,6 @@
 #include <dirent.h>
 
 int main(int argc, char* argv[]) {
-    printf("beginning\n");
-
-    
-    
     char* file = "database.db";
     sqlite3 *db = NULL;
     int rc = 0;
@@ -37,7 +33,37 @@ int main(int argc, char* argv[]) {
 
     // CREATES NEW TABLE contingency
     stmt = NULL;
-    rc = sqlite3_prepare_v2(db, "CREATE TABLE contingency (`contingency name` text NOT NULL, `NERC category` text);", -1, &stmt, NULL);
+    rc = sqlite3_prepare_v2(db, "CREATE TABLE contingency (`contingency name` text PRIMARY KEY NOT NULL, `NERC category` text);", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        printf("not ok2\n");
+        sqlite3_close(db);
+        exit(-1);
+    }
+    rc = sqlite3_step(stmt);
+    while (rc != SQLITE_DONE) {
+        printf("error\n");
+        return -1;
+    }
+    sqlite3_finalize(stmt);
+
+    // DROPS EXISTING TABLE scenarios
+    stmt = NULL;
+    rc = sqlite3_prepare_v2(db, "DROP TABLE IF EXISTS scenarios;", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        printf("not ok2\n");
+        sqlite3_close(db);
+        exit(-1);
+    }
+    rc = sqlite3_step(stmt);
+    while (rc != SQLITE_DONE) {
+        printf("error\n");
+        return -1;
+    }
+    sqlite3_finalize(stmt);
+
+    // CREATES NEW TABLE scenarios
+    stmt = NULL;
+    rc = sqlite3_prepare_v2(db, "CREATE TABLE scenarios (`scenario name` text PRIMARY KEY NOT NULL, `season` text, year int, load float);", -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
         printf("not ok2\n");
         sqlite3_close(db);
