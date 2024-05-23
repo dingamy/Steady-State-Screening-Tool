@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 
 int main(int argc, char* argv[]) {
     printf("beginning\n");
@@ -21,17 +22,43 @@ int main(int argc, char* argv[]) {
     }
     printf("ok\n");
 
-    char filename[] = "C:\\Users\\ading\\Downloads\\Project\\BasePrep-sum2025spcHH-LG@BRNDGEN5-gen.csv";
- 
+    DIR* d;
+	struct dirent* dir;
+    d = opendir("C:\\Users\\ading\\Downloads\\steady state\\ThermalBranch");
+	if (d == NULL) {
+		printf("Couldn't open directory\n");
+		return -1;
+	}
+    while ((dir = readdir(d)) != NULL) {
+		printf("%s\n", dir->d_name);
+		if (strstr(dir->d_name, ".csv") != NULL) {
+			printf("found csv\n");
+			char* filename1 = dir->d_name;
+			printf("FILE NAME % s\n", filename1);
+		}
+    }
+    char *filename = malloc(strlen("C:\\Users\\ading\\Downloads\\Project\\BasePrep-sum2025spcHH-LG@amy#dingBRNDGEN5-gen.csv") + 1);
+    if (filename == NULL) {
+        printf("malloc failed\n");
+        return -1;
+    }
+    strcpy(filename, "C:\\Users\\ading\\Downloads\\Project\\BasePrep-sum2025spcHH-LG@amy#dingBRNDGEN5-gen.csv");
+    
+    printf("hiiiiiiii\n");
+    printf("%s\n", filename);
+
+
     char* contingency;
     char* category = NULL;
-    contingency = strtok(filename, "@"); /* get the first token */
-    contingency = strtok(NULL, "@"); /* get the second part of the string */
-    contingency = strtok(contingency, "-");
+    char* nextToken;
+    contingency = strtok_s(filename, "@", &nextToken); /* get the first token */
+
+    contingency = strtok_s(NULL, "@", &nextToken); /* get the second part of the string */
+    contingency = strtok_s(contingency, "-", &nextToken);
     
     if (strstr(contingency, "#") != NULL) {
-        category = strtok(contingency, "#");
-		contingency = strtok(NULL, "#");
+        category = strtok_s(contingency, "#", &nextToken);
+		contingency = strtok_s(NULL, "#", &nextToken);
     }
     printf(" %s\n", contingency);
     printf(" %s\n", category);
@@ -39,15 +66,15 @@ int main(int argc, char* argv[]) {
     size_t needed = snprintf(NULL, 0, "INSERT INTO contingency (`contingency name`, `NERC category`) VALUES ('%s', '%s');", contingency, category) + 1;
     char* sql_str = malloc(needed);
     if (sql_str == NULL) {
-        perror("malloc");
+        printf("malloc faileds\n");
         return -1;
     }
     if (category != NULL) {
-        sprintf(sql_str, "INSERT INTO contingency (`contingency name`, `NERC category`) VALUES ('%s', '%s');", contingency, category);
+        sprintf_s(sql_str, needed, "INSERT INTO contingency (`contingency name`, `NERC category`) VALUES ('%s', '%s');", contingency, category);
         printf("%s\n", sql_str);
     }
 	else {
-		sprintf(sql_str, "INSERT INTO contingency (`contingency name`) VALUES ('%s');", contingency);
+		sprintf_s(sql_str, needed, "INSERT INTO contingency (`contingency name`) VALUES ('%s');", contingency);
 		printf("%s\n", sql_str);
 	}
 
@@ -69,4 +96,13 @@ int main(int argc, char* argv[]) {
     free(sql_str);
     sqlite3_close(db);
     sqlite3_shutdown();
+}
+
+char* replace_char(char* str, char find, char replace) {
+    char* current_pos = strchr(str, find);
+    while (current_pos) {
+        *current_pos = replace;
+        current_pos = strchr(current_pos, find);
+    }
+    return str;
 }

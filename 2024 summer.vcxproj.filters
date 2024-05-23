@@ -32,6 +32,9 @@
     <ClInclude Include="sqlite-amalgamation-3450300\sqlite3ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dirent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".vs\steady state\v17\workspaceFileList.bin">
@@ -649,5 +652,8 @@
     <None Include="thermalbranch\Base-sum2030-LGspcHH%40System-Intact-branch.bin">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="contacts.csv" />
+    <None Include="packages.config" />
+    <None Include="sql.sql" />
   </ItemGroup>
 </Project>
