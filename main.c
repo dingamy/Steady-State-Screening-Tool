@@ -37,23 +37,21 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
     const char* queries[] = {
-        "DROP TABLE IF EXISTS contingency;",
-        "CREATE TABLE contingency (`contingency name` TEXT PRIMARY KEY NOT NULL, `NERC category` TEXT);",
-        "DROP TABLE IF EXISTS scenarios;",
-        "CREATE TABLE scenarios (`scenario name` TEXT PRIMARY KEY NOT NULL, `season` TEXT, year INT, load FLOAT);"
+        "DROP TABLE IF EXISTS Scenarios;",
+        "CREATE TABLE Scenarios (`Scenario Name` TEXT, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT, `Contingency Name` TEXT, Ncat TEXT);",
     };
     sqlite3_stmt* stmt = NULL;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 2; i++) {
         stmt = NULL;
         rc = sqlite3_prepare_v2(db, queries[i], -1, &stmt, NULL);
         if (rc != SQLITE_OK) {
-            printf("not ok2\n");
+            handle_error(db, "prepare error");
             sqlite3_close(db);
             exit(-1);
         }
         rc = sqlite3_step(stmt);
         while (rc != SQLITE_DONE) {
-            printf("error\n");
+            handle_error(db, "statement error");
             return -1;
         }
         sqlite3_finalize(stmt);
@@ -70,118 +68,78 @@ int main(int argc, char* argv[]) {
 	}
 
     while ((dir = readdir(d)) != NULL) {
-		if (strstr(dir->d_name, ".csv") != NULL) {
-            
+        if (strstr(dir->d_name, ".csv") != NULL) {
+
             char* filename = dir->d_name;
             //char filename[] = "Base-sum2030-LG-islnd0@P1#SPC#GREATPLAINSGENERATION-branch.csv";
+			char* filenameCopy = strdup(filename);
             if (!filename) {
-                printf("strdup failed\n");
+                handle_error(db, "strdup error");
                 closedir(d);
                 return -1;
             }
             printf("File: %s\n", filename);
             char* category = NULL;
-            char* contingency = malloc(500);
+            char* contingency;
             contingency = strtok(filename, "@");
             contingency = strtok(NULL, "@");
+			printf("contingency: %s\n", contingency);
             contingency = strtok(contingency, "-");
 			printf("contingency: %s\n", contingency);
-			printf("category: %s\n", category);
 
-            const char* contingencies[10] = {NULL};
-            if (strstr(contingency, "#") != NULL) {
-                category = strtok(contingency, "#");
-                contingency = strtok(NULL, "#");
-                contingencies[0] = contingency;
-                int i = 1;
-                contingency = strtok(NULL, "#");
-                while (contingency != NULL) {
-                    contingencies[i] = contingency;
-                    i++;
-                    contingency = strtok(NULL, "#");
-                }
-                printf("continges %s\n", contingency);
-				for (int j = 0; j < i; j++) {
-					printf("%d contingency: %s\n", j, contingencies[j]);
-				}   
-                if (i > 1) {
-                    qsort(contingencies, 3, sizeof(contingencies[0]), compareStrings);
-                }
-                printf("hai");
-                for (int j = 0; j < i; j++) {
-                    printf("%d contingency: %s\n", j, contingencies[j]);
-                }
-                char* result = malloc(256);
-                if (result == NULL) {
-                    printf("malloc failed\n");
-                    return -1;
-                }
-                for (int j = 0; j < 10; j++) {
-				    printf("contingency: %s\n", contingencies[j]);
-					if (contingencies[j] == NULL) {
-                        continue;
-					} else if (j == 0) {
-                        strcpy(result, contingencies[0]);
-						printf("sort: %s\n", result);
-						printf("contingency: %s\n", contingencies[0]);
-                    } else {
-                        strcat(result, ", ");
-                        strcat(result, contingencies[i]);
-                    }
-				}
-
-				contingency = realloc(contingency, strlen(result) + 1);
-                if (contingency == NULL) {
-                    printf("realloc failed\n");
-                    return -1;
-                }
-                strcpy(contingency, result);
-				free(result);
+            char* scenario = strtok(filenameCopy, "@");
+            char* study = strtok(strdup(scenario), "-");
+			char* season = strtok(NULL, "-");
+            printf("scenario: %s\n", scenario);
+			printf("study: %s\n", study);
+			printf("season: %s\n", season);
+           
+            if (strcmp(contingency, "System") == 0) {
+                contingency = "INTACT";
+                category = "basecase";
             }
-            printf("success %s\n", contingency);
-			printf("category %s\n", category);
-			
-            size_t needed = snprintf(NULL, 0, "INSERT INTO contingency (`contingency name`, `NERC category`) VALUES ('%s', '%s');", contingency, category) + 1;
+
+            if (contingency[0] == 'P') {
+                category = strtok(contingency, "#");
+                contingency = strtok(NULL, "");
+	
+            }
+            printf("contingency: %s\n", contingency);
+            printf("category: %s\n", category);
+
+            size_t needed = snprintf(NULL, 0, "INSERT INTO Scenarios (`Contingency Name`, `Ncat`) VALUES ('%s', '%s');", contingency, category) + 1;
             char* sql_str = malloc(needed);
             if (sql_str == NULL) {
                 printf("malloc failed\n");
                 return -1;
             }
             if (category != NULL) {
-                sprintf_s(sql_str, needed, "INSERT INTO contingency(`contingency name`, `NERC category`) VALUES('%s', '%s');", contingency, category);
+                sprintf_s(sql_str, needed, "INSERT INTO Scenarios(`Contingency Name`, `Ncat`) VALUES('%s', '%s');", contingency, category);
                 printf("sql_str: %s\n", sql_str);
             }
             else {
-                sprintf_s(sql_str, needed, "INSERT INTO contingency (`contingency name`) VALUES ('%s');", contingency);
+                sprintf_s(sql_str, needed, "INSERT INTO Scenarios (`Contingency Name`) VALUES ('%s');", contingency);
                 printf("sql_str: %s\n", sql_str);
             }
 
             stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
             if (rc != SQLITE_OK) {
-                printf("not ok2\n");
+                handle_error(db, "prepare error");
                 sqlite3_close(db);
                 exit(-1);
             }
 
             rc = sqlite3_step(stmt);
             while (rc != SQLITE_DONE) {
-                printf("error\n");
+                handle_error(db, "statement error");
                 return -1;
             }
 
-            printf("done\n");
             count++;
             sqlite3_finalize(stmt);
-            printf("done1\n");
             free(sql_str);
-            printf("done2\n");
-			if (contingencies[0] != NULL) {
-				free(contingency);
-                printf("done3\n");
-			}
-        
-            printf("done4\n");
+
 		}
     }
 	printf("count: %d\n", count);
