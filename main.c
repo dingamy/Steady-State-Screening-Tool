@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     int count = 0;
     DIR* d;
 	struct dirent* dir;
-    d = opendir("C:\\Users\\ading\\Downloads\\steady state\\ThermalBranch");
+    d = opendir("C:\\Users\\ading\\Downloads\\steady state\\Voltage");
 
 	if (d == NULL) {
 		printf("Couldn't open directory\n");
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
         if (strstr(dir->d_name, ".csv") != NULL) {
 
             char* filename = dir->d_name;
-            //char filename[] = "Base-sum2030-LG-islnd0@P1#SPC#GREATPLAINSGENERATION-branch.csv";
+            //char filename[] = "Base-s142030-LG-islnd0@P1#SPC#GREATPLAINSGENERATION-branch.csv";
 			char* filenameCopy = strdup(filename);
             if (!filename) {
                 handle_error(db, "strdup error");
@@ -83,17 +83,33 @@ int main(int argc, char* argv[]) {
             char* contingency;
             contingency = strtok(filename, "@");
             contingency = strtok(NULL, "@");
-			printf("contingency: %s\n", contingency);
             contingency = strtok(contingency, "-");
-			printf("contingency: %s\n", contingency);
+			
 
             char* scenario = strtok(filenameCopy, "@");
             char* study = strtok(strdup(scenario), "-");
 			char* season = strtok(NULL, "-");
+			char* topology = strtok(NULL, "");
+            char* year = strdup(season) + 3;
+            char* load = season + 1;
+            load[2] = '\0';
+            if (season[0] == 's' || season[0] == 'S') {
+				season = "Summer";
+			}
+            if (season[0] == 'w' || season[0] == 'W') {
+				season = "Winter";
+			}
+            if (load[0] > 65) {
+				load = "100";
+            }
+
             printf("scenario: %s\n", scenario);
 			printf("study: %s\n", study);
 			printf("season: %s\n", season);
-           
+			printf("year: %s\n", year);
+            printf("load: %s\n", load);
+			printf("topology: %s\n", topology);
+			
             if (strcmp(contingency, "System") == 0) {
                 contingency = "INTACT";
                 category = "basecase";
@@ -107,19 +123,19 @@ int main(int argc, char* argv[]) {
             printf("contingency: %s\n", contingency);
             printf("category: %s\n", category);
 
-            size_t needed = snprintf(NULL, 0, "INSERT INTO Scenarios (`Contingency Name`, `Ncat`) VALUES ('%s', '%s');", contingency, category) + 1;
+            size_t needed = snprintf(NULL, 0, "INSERT INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`, `Ncat`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency, category) + 1;
             char* sql_str = malloc(needed);
             if (sql_str == NULL) {
                 printf("malloc failed\n");
                 return -1;
             }
             if (category != NULL) {
-                sprintf_s(sql_str, needed, "INSERT INTO Scenarios(`Contingency Name`, `Ncat`) VALUES('%s', '%s');", contingency, category);
-                printf("sql_str: %s\n", sql_str);
+                sprintf_s(sql_str, needed, "INSERT INTO Scenarios(`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`, `Ncat`) VALUES('%s', '%s', '%s', '%d', '%f', '%s', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency, category);
+                //printf("sql_str: %s\n", sql_str);
             }
             else {
-                sprintf_s(sql_str, needed, "INSERT INTO Scenarios (`Contingency Name`) VALUES ('%s');", contingency);
-                printf("sql_str: %s\n", sql_str);
+                sprintf_s(sql_str, needed, "INSERT INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency);
+                //printf("sql_str: %s\n", sql_str);
             }
 
             stmt = NULL;
