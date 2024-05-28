@@ -11,7 +11,7 @@ void handle_error(sqlite3* db, const char* msg) {
     exit(-1);
 }
 
-void createScenarioTable(sqlite3* db, const char *path) {
+void populateScenCont(sqlite3* db, const char *path) {
 
     sqlite3_stmt* stmt = NULL;
     int rc = 0;
@@ -32,7 +32,7 @@ void createScenarioTable(sqlite3* db, const char *path) {
             if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
                 continue;
             snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
-            createScenarioTable(db, filePath);
+            populateScenCont(db, filePath);
 		}
         if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
             char* filename = dir->d_name;
@@ -88,8 +88,9 @@ void createScenarioTable(sqlite3* db, const char *path) {
             printf("contingency: %s\n", contingency);
             printf("category: %s\n", category);
 
+            // inserting data into scenarios table
 			// allocating memory for the sql string
-            size_t needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`, `Ncat`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency, category) + 1;
+            size_t needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology) + 1;
             char* sql_str = malloc(needed);
             if (sql_str == NULL) {
                 printf("malloc failed\n");
@@ -98,10 +99,10 @@ void createScenarioTable(sqlite3* db, const char *path) {
             }
 			// adding the data to the sql string
             if (category != NULL) {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios(`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`, `Ncat`) VALUES('%s', '%s', '%s', '%d', '%f', '%s', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency, category);
+                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios(`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
             }
             else {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`, `Contingency Name`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s', '%s');", scenario, study, season, atoi(year), atof(load), topology, contingency);
+                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
             }
 
             stmt = NULL;
@@ -112,6 +113,37 @@ void createScenarioTable(sqlite3* db, const char *path) {
                 exit(-1);
             }
 
+            rc = sqlite3_step(stmt);
+            while (rc != SQLITE_DONE) {
+                handle_error(db, "statement error");
+                sqlite3_close(db);
+                return -1;
+            }
+
+			// inserting data into contingency table
+            // allocating memory for the sql string
+            needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Contingency (`Contingency Name`, `NERC Category`) VALUES ('%s', '%s');", contingency, category) + 1;
+            sql_str = realloc(sql_str, needed);
+            if (sql_str == NULL) {
+                printf("malloc failed\n");
+                sqlite3_close(db);
+                return -1;
+            }
+            // adding the data to the sql string
+            if (category != NULL) {
+                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`, `NERC Category`) VALUES('%s', '%s');", contingency, category);
+            }
+            else {
+                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`) VALUES ('%s');", contingency);
+            }
+
+            stmt = NULL;
+            rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
+            if (rc != SQLITE_OK) {
+                handle_error(db, "prepare error");
+                sqlite3_close(db);
+                exit(-1);
+            }
             rc = sqlite3_step(stmt);
             while (rc != SQLITE_DONE) {
                 handle_error(db, "statement error");
@@ -144,10 +176,12 @@ int main(int argc, char* argv[]) {
     // initializing tables
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
-        "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT, `Contingency Name` TEXT, Ncat TEXT);",
+        "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
+        "DROP TABLE IF EXISTS Contingency;",
+		"CREATE TABLE Contingency (`Contingency Name` TEXT PRIMARY KEY, `NERC Category` TEXT);"
     };
     sqlite3_stmt* stmt = NULL;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
         stmt = NULL;
         rc = sqlite3_prepare_v2(db, queries[i], -1, &stmt, NULL);
         if (rc != SQLITE_OK) {
@@ -162,8 +196,8 @@ int main(int argc, char* argv[]) {
         }
         sqlite3_finalize(stmt);
     }
-    // populating tables with data
-	createScenarioTable(db, ".");
+    // populating scenario and contingency tables with data
+	populateScenCont(db, ".");
 
     printf("count: %d\n", COUNT);
 	return 0;
