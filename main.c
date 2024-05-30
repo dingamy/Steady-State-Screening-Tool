@@ -12,18 +12,15 @@ void handle_error(sqlite3* db, const char* msg) {
 }
 
 void populateScenCont(sqlite3* db, const char *path) {
-
     sqlite3_stmt* stmt = NULL;
     int rc = 0;
- 
     DIR* d;
     struct dirent* dir;
     d = opendir(path);
-
     if (d == NULL) {
         printf("Couldn't open directory\n");
         sqlite3_close(db);
-        return -1;
+        exit(-1);
     }
 
     while ((dir = readdir(d)) != NULL) {
@@ -35,13 +32,11 @@ void populateScenCont(sqlite3* db, const char *path) {
             populateScenCont(db, filePath);
 		}
         if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
-            char* filename = dir->d_name;
-            char* filenameCopy = strdup(filename);
+            char* filename = strdup(dir->d_name);
             if (!filename) {
                 handle_error(db, "strdup error");
                 closedir(d);
-                sqlite3_close(db);
-                return -1;
+                exit(-1);
             }
 
             printf("File: %s\n", filename);
@@ -52,11 +47,36 @@ void populateScenCont(sqlite3* db, const char *path) {
             contingency = strtok(filename, "@");
             contingency = strtok(NULL, "@");
             contingency = strtok(contingency, "-");
-            char* scenario = strtok(filenameCopy, "@");
-            char* study = strtok(strdup(scenario), "-");
+            char* scenario = strdup(filename);
+            if (!scenario) {
+                handle_error(db, "strdup error");
+                free(filename);
+                closedir(d);
+                exit(-1);
+            }
+            scenario = strtok(scenario, "@");
+
+            char* study = strdup(scenario);
+            if (!study) {
+                handle_error(db, "strdup error");
+                free(filename);
+                free(scenario);
+                closedir(d);
+                exit(-1);
+            }
+            study = strtok(study, "-");
             char* season = strtok(NULL, "-");
             char* topology = strtok(NULL, "");
-            char* year = strdup(season) + 3;
+            char* year = strdup(season);
+            if (!filename) {
+                handle_error(db, "strdup error");
+                free(filename);
+                free(scenario);
+                free(study);
+                closedir(d);
+                exit(-1);
+            }
+            year += 3;
             char* load = season + 1;
             load[2] = '\0';
             if (season[0] == 's' || season[0] == 'S') {
@@ -94,208 +114,240 @@ void populateScenCont(sqlite3* db, const char *path) {
             char* sql_str = malloc(needed);
             if (sql_str == NULL) {
                 printf("malloc failed\n");
+                free(filename);
+                free(scenario);
+                free(study);
                 sqlite3_close(db);
                 return -1;
             }
 			// adding the data to the sql string
             if (category != NULL) {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios(`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
+                snprintf(sql_str, needed, "INSERT OR IGNORE INTO Scenarios(`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
             }
             else {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
+                snprintf(sql_str, needed, "INSERT OR IGNORE INTO Scenarios (`Scenario Name`, `Study`, `Season`, `Year`, `Load`, `Topology`) VALUES ('%s', '%s', '%s', '%d', '%f', '%s');", scenario, study, season, atoi(year), atof(load), topology);
             }
 
             stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
             if (rc != SQLITE_OK) {
                 handle_error(db, "prepare error");
-                sqlite3_close(db);
+                free(filename);
+                free(scenario);
+                free(study);
+                free(sql_str);
                 exit(-1);
             }
 
             rc = sqlite3_step(stmt);
             while (rc != SQLITE_DONE) {
                 handle_error(db, "statement error");
-                sqlite3_close(db);
-                return -1;
+                free(filename);
+                free(scenario);
+                free(study);
+                free(sql_str);
+                exit(-1);
             }
-
+            sqlite3_finalize(stmt);
+            free(sql_str);
 			// inserting data into contingency table
             // allocating memory for the sql string
             needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Contingency (`Contingency Name`, `NERC Category`) VALUES ('%s', '%s');", contingency, category) + 1;
-            sql_str = realloc(sql_str, needed);
+            sql_str = malloc(needed);
             if (sql_str == NULL) {
                 printf("malloc failed\n");
+                free(filename);
+                free(scenario);
+                free(study);
                 sqlite3_close(db);
-                return -1;
+                exit(-1);
             }
             // adding the data to the sql string
             if (category != NULL) {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`, `NERC Category`) VALUES('%s', '%s');", contingency, category);
+                snprintf(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`, `NERC Category`) VALUES('%s', '%s');", contingency, category);
             }
             else {
-                sprintf_s(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`) VALUES ('%s');", contingency);
+                snprintf(sql_str, needed, "INSERT OR IGNORE INTO Contingency (`Contingency Name`) VALUES ('%s');", contingency);
             }
 
-            stmt = NULL;
             rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
             if (rc != SQLITE_OK) {
                 handle_error(db, "prepare error");
-                sqlite3_close(db);
+                free(filename);
+                free(scenario);
+                free(study);
+                free(sql_str);
                 exit(-1);
             }
             rc = sqlite3_step(stmt);
             while (rc != SQLITE_DONE) {
                 handle_error(db, "statement error");
-                sqlite3_close(db);
-                return -1;
+                free(filename);
+                free(scenario);
+                free(study);
+                free(sql_str);
+                exit(-1);
             }
 
             COUNT++;
             sqlite3_finalize(stmt);
+            stmt = NULL;
+            free(filename);
+            free(scenario);
+            free(study);
             free(sql_str);
 
         }
     }
 }
-char* getContingency(char* filename) {
-    char* category = NULL;
-    char* contingency;
-    contingency = strtok(filename, "@");
+char* getContingency(char** path) {
+	char* contingency = malloc(sizeof(char) * strlen(path) + 1);
+	printf("path: %s\n", path);
+	char* pathCopy = strdup(path);
+    contingency = strtok(pathCopy, "@");
     contingency = strtok(NULL, "@");
     contingency = strtok(contingency, "-");
     if (strcmp(contingency, "System") == 0) { // edge case
         contingency = "INTACT";
-        category = "basecase";
     }
     if (contingency[0] == 'P') { // if category exists, then it starts with P followed by 1 or 2 digits
-        category = strtok(contingency, "#");
+        strtok(contingency, "#");
         contingency = strtok(NULL, "");
-
     }
+	free(pathCopy); 
     printf("contingency: %s\n", contingency);
-    printf("category: %s\n", category);
     return contingency;
 }
 
-int populateBusBusSim(sqlite3* db, const char* path) {
+char* getScenario(char** path) {
+    char* pathCopy = strdup(path);
+    char* scenario = strdup(pathCopy);
+    scenario = strtok(scenario, "@");
+	printf("scenario: %s\n", scenario);
+	return scenario;
+}
+int populateBusBusSim(sqlite3* db, char* path) {
     int linecount = 0;
     sqlite3_stmt* stmt = NULL;
+    sqlite3_stmt* stmt2 = NULL;
     int rc = 0;
-    FILE *file = fopen(path, "r");
-	if (!file) {
-		printf("File not found\n");
-		return -1;
-	}
-	size_t needed = snprintf(NULL, 0, "INSERT INTO BUS (`Bus Number`, `Bus Name`, `Area`, `Zone`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);") + 100;  
-	char* sql_str = malloc(needed);
-	if (sql_str == NULL) {
-		printf("malloc failed\n");
-		return -1;
-	}
+
+    FILE* file = fopen(path, "r");
+    if (!file) {
+        printf("File not found\n");
+        return -1;
+    }
+
+    size_t needed = snprintf(NULL, 0, "INSERT INTO BUS (`Bus Number`, `Bus Name`, `Area`, `Zone`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);") + 100;
+    char* sql_str = malloc(needed);
+    if (sql_str == NULL) {
+        printf("malloc failed\n");
+        return -1;
+    }
     snprintf(sql_str, needed, "INSERT INTO BUS (`Bus Number`, `Bus Name`, `Area`, `Zone`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
     rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
         handle_error(db, "prepare error");
         exit(-1);
     }
-    char * contingency = strtok(path, "@");
-    contingency = strtok(NULL, "@");
-    contingency = strtok(contingency, "-");
-    if (strcmp(contingency, "System") == 0) { // edge case
-        contingency = "INTACT";
-    if (contingency[0] == 'P') { // if category exists, then it starts with P followed by 1 or 2 digits
-        strtok(contingency, "#");
-        contingency = strtok(NULL, "");
+
+    char* contingency = getContingency(path);
+    char* scenario = getScenario(path);
+
+
+    size_t needed2 = snprintf(NULL, 0, "INSERT INTO `Bus Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `stat`, `bus_pu`, `bus_angle`, `violate`, `exception`) VALUES ('%s', '%s', ?, ?, ?, ?, ?, ?);", scenario, contingency) + 100;
+    char* sql_str2 = malloc(needed2);
+    if (sql_str2 == NULL) {
+        printf("malloc failed\n");
+        return -1;
     }
-	char* line = malloc(1024);
-    fgets(line, 1024, file) != NULL;
+    snprintf(sql_str2, needed2, "INSERT INTO `Bus Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `stat`, `bus_pu`, `bus_angle`, `violate`, `exception`) VALUES ('%s', '%s', ?, ?, ?, ?, ?, ?);", scenario, contingency);
+    rc = sqlite3_prepare_v2(db, sql_str2, -1, &stmt2, NULL);
+    if (rc != SQLITE_OK) {
+        handle_error(db, "prepare error");
+        exit(-1);
+    }
+
+    char* line = malloc(1024);
+    fgets(line, 1024, file) != NULL; // gets rid of column namse
     while (fgets(line, 1024, file) != NULL) {
-		char* bus_number = strtok(line, ",");
-		char* bus_name = strtok(NULL, ",");
-		char* area = strtok(NULL, ",");
-		char* zone = strtok(NULL, ",");
-		char* owner = strtok(NULL, ",");
-		char* voltage_base = strtok(NULL, ",");
-		char* criteria_nlo = strtok(NULL, ",");
-		char* criteria_nhi = strtok(NULL, ",");
-		char* criteria_elo = strtok(NULL, ",");
-		char* criteria_ehi = strtok(NULL, ",");
-		char* stat = strtok(NULL, ",");
-		char* bus_pu = strtok(NULL, ",");
-		char* bus_angle = strtok(NULL, ",");
-		char* violate = strtok(NULL, ",");
-		char* exception = strtok(NULL, ",");
+        char* bus_number = strtok(line, ",");
+        char* bus_name = strtok(NULL, ",");
+        char* area = strtok(NULL, ",");
+        char* zone = strtok(NULL, ",");
+        char* owner = strtok(NULL, ",");
+        char* voltage_base = strtok(NULL, ",");
+        char* criteria_nlo = strtok(NULL, ",");
+        char* criteria_nhi = strtok(NULL, ",");
+        char* criteria_elo = strtok(NULL, ",");
+        char* criteria_ehi = strtok(NULL, ",");
+        char* stat = strtok(NULL, ",");
+        char* bus_pu = strtok(NULL, ",");
+        char* bus_angle = strtok(NULL, ",");
+        char* violate = strtok(NULL, ",");
+        char* exception = strtok(NULL, ",");
         printf("line: %s\n", line);
-		printf("bus_number: %s\n", bus_number);
-		printf("bus_name: %s\n", bus_name);
-		printf("area: %s\n", area);
-		printf("zone: %s\n", zone);
-		printf("owner: %s\n", owner);
-		printf("voltage_base: %s\n", voltage_base);
-		printf("criteria_nlo: %s\n", criteria_nlo);
-		printf("criteria_nhi: %s\n", criteria_nhi);
-		printf("criteria_elo: %s\n", criteria_elo);
-		printf("criteria_ehi: %s\n", criteria_ehi);
-		printf("stat: %s\n", stat);
-		printf("bus_pu: %s\n", bus_pu);
-		printf("bus_angle: %s\n", bus_angle);
-		printf("violate: %s\n", violate);
-		printf("exception: %s\n", exception);
+        printf("bus_number: %s\n", bus_number);
+        printf("bus_name: %s\n", bus_name);
+        printf("area: %s\n", area);
+        printf("zone: %s\n", zone);
+        printf("owner: %s\n", owner);
+        printf("voltage_base: %s\n", voltage_base);
+        printf("criteria_nlo: %s\n", criteria_nlo);
+        printf("criteria_nhi: %s\n", criteria_nhi);
+        printf("criteria_elo: %s\n", criteria_elo);
+        printf("criteria_ehi: %s\n", criteria_ehi);
+        printf("stat: %s\n", stat);
+        printf("bus_pu: %s\n", bus_pu);
+        printf("bus_angle: %s\n", bus_angle);
+        printf("violate: %d\n", atoi(violate));
+        printf("exception: %s\n", exception);
         linecount++;
-        sqlite3_bind_int64(stmt, 1, atoi(bus_number), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 1, atoi(bus_number), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, bus_name, -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 3, atoi(area), -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 4, atoi(zone), -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 5, atoi(owner), -1, SQLITE_STATIC);
         sqlite3_bind_double(stmt, 6, atof(voltage_base), -1, SQLITE_STATIC);
-        sqlite3_bind_double(stmt, 7, atof(criteria_nlo), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 1, atoi(bus_number), -1, SQLITE_STATIC);
         sqlite3_bind_double(stmt, 8, atof(criteria_nhi), -1, SQLITE_STATIC);
         sqlite3_bind_double(stmt, 9, atof(criteria_elo), -1, SQLITE_STATIC);
         sqlite3_bind_double(stmt, 10, atof(criteria_ehi), -1, SQLITE_STATIC);
-		rc = sqlite3_step(stmt);
-        if (bus_number == NULL) {
-            printf("NULL");
-            return 1;
-        }
+        rc = sqlite3_step(stmt);
         if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
-            handle_error(db, "steo errir");
+            handle_error(db, "step error");
             sqlite3_close(db);
             exit(-1);
         }
         sqlite3_reset(stmt);
-    }
-	printf("linecount: %d\n", linecount);
-    sqlite3_finalize(stmt);
-    free(sql_str);
-    fclose(file);
-}
+        sqlite3_clear_bindings(stmt);
 
-void populateBus(sqlite3* db, const char* path) {
-    sqlite3_stmt* stmt = NULL;
-    int rc = 0;
-    size_t needed = snprintf(NULL, 0, "sqlite3 database.db .dump") + 1;
-    char* sql_str = malloc(needed);
-    if (sql_str == NULL) {
-        printf("malloc failed\n");
-        sqlite3_close(db);
-        return -1;
+        sqlite3_bind_int(stmt2, 1, atoi(bus_number), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt2, 2, atoi(stat), -1, SQLITE_STATIC);
+        sqlite3_bind_double(stmt2, 3, atof(bus_pu), -1, SQLITE_STATIC);
+        sqlite3_bind_double(stmt2, 4, atof(bus_angle), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt2, 5, atoi(violate), -1, SQLITE_STATIC);
+
+		if (exception == NULL) {
+			sqlite3_bind_null(stmt2, 6, SQLITE_STATIC);
+		}
+		else { 
+            sqlite3_bind_int(stmt2, 6, atoi(exception), -1, SQLITE_STATIC); 
+        }
+        rc = sqlite3_step(stmt2);
+        if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+            handle_error(db, "step error");
+            sqlite3_close(db);
+            exit(-1);
+        }
+        sqlite3_reset(stmt2);
+        sqlite3_clear_bindings(stmt2);
     }
-    sprintf_s(sql_str, needed, "sqlite3 database.db .dump");
-    stmt = NULL;
-    rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
-    if (rc != SQLITE_OK) {
-        handle_error(db, "prepare error");
-        sqlite3_close(db);
-        exit(-1);
-    }
-    rc = sqlite3_step(stmt);
-    while (rc != SQLITE_DONE) {
-        handle_error(db, "statement error");
-        sqlite3_close(db);
-        return -1;
-    }
-	printf("dumped\n"); 
+    printf("linecount: %d\n", linecount);
+    free(sql_str);
+    free(sql_str2);
+    fclose(file);
+    return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -341,9 +393,9 @@ int main(int argc, char* argv[]) {
     }
     // populating scenario and contingency tables with data
 	populateScenCont(db, ".");
-
-	populateBusBusSim(db, "C:\\Users\\ading\\Downloads\\steady state\\Voltage\\Base-sum2030-LGspcHH@BRNDSHUNT-volt.csv", "BUS");
     printf("count: %d\n", COUNT);
+	populateBusBusSim(db, "C:\\Users\\ading\\Downloads\\steady state\\Voltage\\Base-sum2030-LGspcHH@P11#SPC#BD#5-volt.csv", "BUS");
+    
 	return 0;
 }
 
