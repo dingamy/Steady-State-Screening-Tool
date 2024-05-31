@@ -103,7 +103,6 @@ void populateScenCont(sqlite3* db, const char *path) {
             if (contingency[0] == 'P') { // if category exists, then it starts with P followed by 1 or 2 digits
                 category = strtok(contingency, "#");
                 contingency = strtok(NULL, "");
-
             }
             printf("contingency: %s\n", contingency);
             printf("category: %s\n", category);
@@ -202,11 +201,14 @@ void populateScenCont(sqlite3* db, const char *path) {
     }
 }
 char* getContingency(char* path) {
-	char* contingency = malloc(sizeof(char) * strlen(path) + 1);
+	char* contingency = malloc(1024);
 	char* pathCopy = strdup(path);
-    strtok(pathCopy, "@");
-    strtok(NULL, "@");
+    contingency = strtok(pathCopy, "@");
+  
+    contingency = strtok(NULL, "@");
+
     contingency = strtok(contingency, "-");
+
     if (strcmp(contingency, "System") == 0) { // edge case
         contingency = "INTACT";
     }
@@ -222,6 +224,13 @@ char* getScenario(char* path) {
     char* scenario = strdup(pathCopy);
     scenario = strtok(scenario, "@");
 	return scenario;
+}
+char* getSeason(char* path) {
+	char* pathCopy = strdup(path);
+	char* season = strtok(pathCopy, "-");
+	season = strtok(NULL, "-");
+	printf("season: %s\n", season);
+	return season;
 }
 void populateBusTables(sqlite3* db, char* path) {
     int linecount = 0;
@@ -389,7 +398,292 @@ void populateBusTables(sqlite3* db, char* path) {
 }
 
 void populateBranchTables(sqlite3* db, char* path) {
+    int linecount = 0;
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_stmt* stmt2 = NULL;
+	sqlite3_stmt* stmt3 = NULL;
+	sqlite3_stmt* stmt4 = NULL;
+	sqlite3_stmt* stmt5 = NULL;
+    int rc = 0;
 
+    DIR* d;
+    struct dirent* dir;
+    d = opendir(path);
+    if (d == NULL) {
+        printf("Couldn't open directory\n");
+        sqlite3_close(db);
+        exit(-1);
+    }
+
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_type == DT_DIR) { // recursively traverse through directories
+            char filePath[1024];
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+                continue;
+            snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
+            populateBranchTables(db, filePath);
+        }
+        if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
+            char* filename = strdup(dir->d_name);
+            //char* filename = "Base-sum2030-LGspcHH@BRNDSHUNT-volt.csv";
+            if (!filename) {
+                handle_error(db, "strdup error");
+                closedir(d);
+                exit(-1);
+            }
+            printf("filename: %s\n", filename);
+            size_t needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Branch (`Branch Name`, `Metered Bus Number`, `Other Bus Number`, `Bus ID`, `Voltage Base`, `RateA sum`, `RateB sum`, `RateC sum`, `RateA win`, `RateB win`, `RateC win`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			char* sql_str = malloc(needed);
+			if (sql_str == NULL) {
+				printf("malloc failed\n");
+				exit(-1);
+			}
+			snprintf(sql_str, needed, "INSERT OR IGNORE INTO Branch (`Branch Name`, `Metered Bus Number`, `Other Bus Number`, `Bus ID`, `Voltage Base`, `RateA sum`, `RateB sum`, `RateC sum`, `RateA win`, `RateB win`, `RateC win`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
+			if (rc != SQLITE_OK) {
+				handle_error(db, "prepare error1");
+				exit(-1);
+			}
+			char* contingency = getContingency(filename);
+			char* scenario = getScenario(filename);
+            char* season = getSeason(filename);
+
+            size_t needed2 = snprintf(NULL, 0, "INSERT OR IGNORE INTO `Branch Simulation Results` (`Scenario Name`, `Contingency Name`, `Branch Name`, `stat`, `p_metered`, `p_other`, `q_metered`, `q_other`, `amp_angle_metered`, `amp_angle_other`, `amp_metered`, `amp_other`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			char* sql_str2 = malloc(needed2);
+            if (sql_str2 == NULL) {
+				printf("malloc failed\n");
+				exit(-1);   
+            }
+            snprintf(sql_str2, needed2, "INSERT OR IGNORE INTO `Branch Simulation Results` (`Scenario Name`, `Contingency Name`, `Branch Name`, `stat`, `p_metered`, `p_other`, `q_metered`, `q_other`, `amp_angle_metered`, `amp_angle_other`, `amp_metered`, `amp_other`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			rc = sqlite3_prepare_v2(db, sql_str2, -1, &stmt2, NULL);
+            if (rc != SQLITE_OK) {
+				handle_error(db, "prepare error2");
+				exit(-1);
+            }
+
+            size_t needed3 = snprintf(NULL, 0, "SELECT exists(SELECT * FROM `Branch` WHERE `Branch Name` = ?);");
+			char* sql_str3 = malloc(needed3);
+			if (sql_str3 == NULL) {
+				printf("malloc failed\n");
+				exit(-1);
+			}
+			snprintf(sql_str3, needed3, "SELECT exists(SELECT * FROM `Branch` WHERE `Branch Name` = ?);");
+			rc = sqlite3_prepare_v2(db, sql_str3, -1, &stmt3, NULL);
+            if (rc != SQLITE_OK) {
+                handle_error(db, "prepare error3");
+                exit(-1);
+            }
+
+            size_t needed4 = snprintf(NULL, 0, "UPDATE Branch SET `RateA sum` = ?, `RateB sum` = ?, `RateC sum` = ? WHERE `Branch Name` = ?;");
+            char* sql_str4 = malloc(needed4);
+            if (sql_str4 == NULL) {
+                printf("malloc failed\n");
+                exit(-1);
+            }
+            snprintf(sql_str4, needed4, "UPDATE Branch SET `RateA sum` = ?, `RateB sum` = ?, `RateC sum` = ? WHERE `Branch Name` = ?;");
+            rc = sqlite3_prepare_v2(db, sql_str4, -1, &stmt4, NULL);
+            if (rc != SQLITE_OK) {
+                handle_error(db, "prepare error4");
+                exit(-1);
+            }
+
+            size_t needed5 = snprintf(NULL, 0, "UPDATE Branch SET `RateA win` = ?, `RateB win` = ?, `RateC win` = ? WHERE `Branch Name` = ?;");
+            char* sql_str5 = malloc(needed4);
+            if (sql_str5 == NULL) {
+                printf("malloc failed\n");
+                exit(-1);
+            }
+            snprintf(sql_str5, needed5, "UPDATE Branch SET `RateA win` = ?, `RateB win` = ?, `RateC win` = ? WHERE `Branch Name` = ?;");
+            rc = sqlite3_prepare_v2(db, sql_str5, -1, &stmt5, NULL);
+            if (rc != SQLITE_OK) {
+                handle_error(db, "prepare error4");
+                exit(-1);
+            }
+
+			char* line = malloc(1024);
+			char filePath[1024];
+			snprintf(filePath, sizeof(filePath), ".\\ThermalBranch\\%s", dir->d_name);
+			FILE* file = fopen(filePath, "r");
+			if (file == NULL) {
+				printf("Couldn't open file\n");
+				sqlite3_close(db);
+				exit(-1);
+            }
+			fgets(line, 1024, file); // gets rid of column name
+			printf("line: %s\n", line);
+            while (fgets(line, 1024, file) != NULL) {
+				char* branch_name = strtok(line, ",");
+				char* metered_bus_number = strtok(NULL, ",");
+				char* other_bus_number = strtok(NULL, ",");
+				char* branch_id = strtok(NULL, ",");
+				char* voltage_base = strtok(NULL, ",");
+                char* rateA = strtok(NULL, ",");
+				char* rateB = strtok(NULL, ",");
+				char* rateC = strtok(NULL, ",");
+				char* p_metered = strtok(NULL, ",");
+				char* p_other = strtok(NULL, ",");
+				char* q_metered = strtok(NULL, ",");
+				char* q_other = strtok(NULL, ",");
+				char* amp_angle_metered = strtok(NULL, ",");
+				char* amp_angle_other = strtok(NULL, ",");
+				char* amp_metered = strtok(NULL, ",");
+				char* amp_other = strtok(NULL, ",");
+				char* ploss = strtok(NULL, ",");
+				char* qloss = strtok(NULL, ",");
+				char* stat = strtok(NULL, ",");
+				char* violate = strtok(NULL, ",");
+				char* exception = strtok(NULL, ",");
+                
+				printf("branch_name: %s\n", branch_name);
+				//printf("metered_bus_number: %s\n", metered_bus_number);
+				//printf("other_bus_number: %s\n", other_bus_number);
+				//printf("branch_id: %s\n", branch_id);
+				//printf("voltage_base: %s\n", voltage_base);
+				//printf("rateA: %s\n", rateA);
+				//printf("rateB: %s\n", rateB);
+				//printf("rateC: %s\n", rateC);
+				//printf("p_metered: %s\n", p_metered);
+				//printf("p_other: %s\n", p_other);
+				//printf("q_metered: %s\n", q_metered);
+				//printf("q_other: %s\n", q_other);
+				//printf("amp_angle_metered: %s\n", amp_angle_metered);
+				//printf("amp_angle_other: %s\n", amp_angle_other);
+				//printf("amp_metered: %s\n", amp_metered);
+				//printf("amp_other: %s\n", amp_other);
+				//printf("ploss: %s\n", ploss);
+				//printf("qloss: %s\n", qloss);
+				//printf("stat: %s\n", stat);
+				//printf("violate: %s\n", violate);
+				//printf("exception: %s\n", exception);
+                
+				sqlite3_bind_text(stmt3, 1, branch_name, -1, SQLITE_STATIC);
+                rc = sqlite3_step(stmt3);
+                if (rc == SQLITE_ROW) {
+                    // Retrieve the result from the first (and only) column
+                    int exists = sqlite3_column_int(stmt3, 0);
+                    if (exists == 1) {
+                        if (season[0] == 's' || season[0] == 'S') {
+                            sqlite3_bind_double(stmt4, 1, atof(rateA), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt4, 2, atof(rateB), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt4, 3, atof(rateC), -1, SQLITE_STATIC);
+                            sqlite3_bind_text(stmt4, 4, branch_name, -1, SQLITE_STATIC);
+                            rc = sqlite3_step(stmt4);
+                            if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+                                handle_error(db, "step error");
+                                sqlite3_close(db);
+                                exit(-1);
+                            }
+
+                            sqlite3_reset(stmt4);
+                            sqlite3_clear_bindings(stmt4);
+                        }
+                        else {
+                            sqlite3_bind_double(stmt5, 1, atof(rateA), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt5, 2, atof(rateB), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt5, 3, atof(rateC), -1, SQLITE_STATIC);
+                            sqlite3_bind_text(stmt5, 4, branch_name, -1, SQLITE_STATIC);
+                            rc = sqlite3_step(stmt5);
+                            if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+                                handle_error(db, "step error");
+                                sqlite3_close(db);
+                                exit(-1);
+                            }
+
+                            sqlite3_reset(stmt5);
+                            sqlite3_clear_bindings(stmt5);
+                        }
+
+                    }
+                    else {
+                        sqlite3_bind_text(stmt, 1, branch_name, -1, SQLITE_STATIC);
+                        sqlite3_bind_int64(stmt, 2, atoi(metered_bus_number), -1, SQLITE_STATIC);
+                        sqlite3_bind_int64(stmt, 3, atoi(other_bus_number), -1, SQLITE_STATIC);
+                        sqlite3_bind_text(stmt, 4, branch_id, -1, SQLITE_STATIC);
+                        sqlite3_bind_double(stmt, 5, atof(voltage_base), -1, SQLITE_STATIC);
+                        if (season[0] == 's' || season[0] == 'S') {
+                            sqlite3_bind_double(stmt, 6, atof(rateA), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt, 7, atof(rateB), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt, 8, atof(rateC), -1, SQLITE_STATIC);
+                        }
+                        else {
+                            sqlite3_bind_double(stmt, 9, atof(rateA), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt, 10, atof(rateB), -1, SQLITE_STATIC);
+                            sqlite3_bind_double(stmt, 11, atof(rateC), -1, SQLITE_STATIC);
+                        }
+
+                        rc = sqlite3_step(stmt);
+                        if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+                            handle_error(db, "step error");
+                            sqlite3_close(db);
+                            exit(-1);
+                        }
+
+                        sqlite3_reset(stmt);
+                        sqlite3_clear_bindings(stmt);
+                    }
+                }
+                else {
+                    fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+                }
+
+                sqlite3_reset(stmt3);
+                sqlite3_clear_bindings(stmt3);
+
+                
+                // check if branch name already exists
+                // then only insert the other values into the table depending on the season 
+
+                // else
+
+				
+
+
+                //
+
+				sqlite3_bind_text(stmt2, 1, scenario, -1, SQLITE_STATIC);
+				sqlite3_bind_text(stmt2, 2, contingency, -1, SQLITE_STATIC);
+				sqlite3_bind_text(stmt2, 3, branch_name, -1, SQLITE_STATIC);
+				sqlite3_bind_int(stmt2, 4, atoi(stat), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 5, atof(p_metered), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 6, atof(p_other), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 7, atof(q_metered), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 8, atof(q_other), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 9, atof(amp_angle_metered), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 10, atof(amp_angle_other), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 11, atof(amp_metered), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 12, atof(amp_other), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 13, atof(ploss), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 14, atof(qloss), -1, SQLITE_STATIC);
+				sqlite3_bind_int(stmt2, 15, atoi(violate), -1, SQLITE_STATIC);
+                if (exception == NULL) {
+                    sqlite3_bind_int(stmt2, 16, 0, SQLITE_STATIC);
+                } else {
+                    sqlite3_bind_int(stmt2, 16, atoi(exception), -1, SQLITE_STATIC);
+                }
+				rc = sqlite3_step(stmt2);
+                if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+					handle_error(db, "step error");
+					sqlite3_close(db);
+					exit(-1);
+                }
+				sqlite3_reset(stmt2);
+				sqlite3_clear_bindings(stmt2);
+
+
+            }
+			fclose(file);
+			stmt = NULL;
+			stmt2 = NULL;
+			stmt3 = NULL;
+			free(sql_str);
+			free(sql_str2);
+            free(sql_str3);
+			free(line);
+			sqlite3_finalize(stmt);
+			sqlite3_finalize(stmt2);
+            sqlite3_finalize(stmt3);
+        }
+    }
 }
 int main(int argc, char* argv[]) {
     char* file = "database2.db";
@@ -412,10 +706,14 @@ int main(int argc, char* argv[]) {
 		"DROP TABLE IF EXISTS BUS;",
         "CREATE TABLE BUS (`Bus Number` INT, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
 		"DROP TABLE IF EXISTS `Bus Simulation Results`;",
-        "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);"
+        "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
+		"DROP TABLE IF EXISTS Branch;",
+		"CREATE TABLE Branch (`Branch Name` TEXT PRIMARY KEY, `Metered Bus Number` INT, `Other Bus Number` INT, `Bus ID` TEXT, `Voltage Base` FLOAT, `RateA sum` FLOAT, `RateB sum` FLOAT, `RateC sum` FLOAT, `RateA win` FLOAT, `RateB win` FLOAT, `RateC win` FLOAT);",
+		"DROP TABLE IF EXISTS `Branch Simulation Results`;",
+		"CREATE TABLE `Branch Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Branch Name` TEXT, `stat` INT, `p_metered` FLOAT, `p_other` FLOAT, `q_metered` FLOAT, `q_other` FLOAT, `amp_angle_metered` FLOAT, `amp_angle_other` FLOAT, `amp_metered` FLOAT, `amp_other` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Branch Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Branch Name`) REFERENCES Branch (`Branch Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
     };
     sqlite3_stmt* stmt = NULL;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 12; i++) {
         stmt = NULL;
         rc = sqlite3_prepare_v2(db, queries[i], -1, &stmt, NULL);
         if (rc != SQLITE_OK) {
@@ -430,10 +728,11 @@ int main(int argc, char* argv[]) {
         sqlite3_finalize(stmt);
     }
     // populating scenario and contingency tables with data
-	populateScenCont(db, ".");
+	//populateScenCont(db, ".");
     printf("count: %d\n", COUNT);
 
 	//populateBusBusSim(db, "./Voltage");
+	populateBranchTables(db, "./ThermalBranch");
     
 	return 0;
 }
