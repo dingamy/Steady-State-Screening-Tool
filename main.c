@@ -201,14 +201,14 @@ void populateScenCont(sqlite3* db, const char *path) {
     }
 }
 char* getContingency(char* path) {
-	char* contingency = malloc(1024);
+
 	char* pathCopy = strdup(path);
-    contingency = strtok(pathCopy, "@");
-  
+    char* contingency = strtok(pathCopy, "@");
+    printf("contingency1%s\n", contingency);
     contingency = strtok(NULL, "@");
-
+    printf("contingency2%s\n", contingency);
     contingency = strtok(contingency, "-");
-
+    printf("contingency3%s\n", contingency);
     if (strcmp(contingency, "System") == 0) { // edge case
         contingency = "INTACT";
     }
@@ -216,7 +216,8 @@ char* getContingency(char* path) {
         strtok(contingency, "#");
         contingency = strtok(NULL, "");
     }
-	free(pathCopy); 
+	
+    printf("contingency4%s\n", contingency);
     return contingency;
 }
 char* getScenario(char* path) {
@@ -445,6 +446,7 @@ void populateBranchTables(sqlite3* db, char* path) {
 				exit(-1);
 			}
 			char* contingency = getContingency(filename);
+			printf("contingency: %s\n", contingency);
 			char* scenario = getScenario(filename);
             char* season = getSeason(filename);
 
@@ -534,7 +536,7 @@ void populateBranchTables(sqlite3* db, char* path) {
 				char* violate = strtok(NULL, ",");
 				char* exception = strtok(NULL, ",");
                 
-				printf("branch_name: %s\n", branch_name);
+				//printf("branch_name: %s\n", branch_name);
 				//printf("metered_bus_number: %s\n", metered_bus_number);
 				//printf("other_bus_number: %s\n", other_bus_number);
 				//printf("branch_id: %s\n", branch_id);
@@ -629,17 +631,6 @@ void populateBranchTables(sqlite3* db, char* path) {
                 sqlite3_reset(stmt3);
                 sqlite3_clear_bindings(stmt3);
 
-                
-                // check if branch name already exists
-                // then only insert the other values into the table depending on the season 
-
-                // else
-
-				
-
-
-                //
-
 				sqlite3_bind_text(stmt2, 1, scenario, -1, SQLITE_STATIC);
 				sqlite3_bind_text(stmt2, 2, contingency, -1, SQLITE_STATIC);
 				sqlite3_bind_text(stmt2, 3, branch_name, -1, SQLITE_STATIC);
@@ -703,9 +694,9 @@ int main(int argc, char* argv[]) {
         "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
         "DROP TABLE IF EXISTS Contingency;",
 		"CREATE TABLE Contingency (`Contingency Name` TEXT PRIMARY KEY, `NERC Category` TEXT);",
-		"DROP TABLE IF EXISTS BUS;",
-        "CREATE TABLE BUS (`Bus Number` INT, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
-		"DROP TABLE IF EXISTS `Bus Simulation Results`;",
+        "DROP TABLE IF EXISTS BUS;",
+        "CREATE TABLE BUS (`Bus Number` INT PRIMARY KEY, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
+        "DROP TABLE IF EXISTS `Bus Simulation Results`;",
         "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
 		"DROP TABLE IF EXISTS Branch;",
 		"CREATE TABLE Branch (`Branch Name` TEXT PRIMARY KEY, `Metered Bus Number` INT, `Other Bus Number` INT, `Bus ID` TEXT, `Voltage Base` FLOAT, `RateA sum` FLOAT, `RateB sum` FLOAT, `RateC sum` FLOAT, `RateA win` FLOAT, `RateB win` FLOAT, `RateC win` FLOAT);",
@@ -727,13 +718,13 @@ int main(int argc, char* argv[]) {
         }
         sqlite3_finalize(stmt);
     }
-    // populating scenario and contingency tables with data
-	//populateScenCont(db, ".");
-    printf("count: %d\n", COUNT);
 
-	//populateBusBusSim(db, "./Voltage");
+	populateScenCont(db, ".");
+	populateBusTables(db, "./Voltage");
 	populateBranchTables(db, "./ThermalBranch");
     
 	return 0;
 }
+
+
 
