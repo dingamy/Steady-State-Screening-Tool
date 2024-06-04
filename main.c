@@ -397,7 +397,6 @@ void populateBusTables(sqlite3* db, char* path) {
     }
     closedir(d);
 }
-
 void populateBranchTables(sqlite3* db, char* path) {
     int linecount = 0;
     sqlite3_stmt* stmt = NULL;
@@ -676,6 +675,213 @@ void populateBranchTables(sqlite3* db, char* path) {
         }
     }
 }
+void populateTransformer2(sqlite3* db, char* path) {
+    sqlite3_stmt* stmt = NULL;
+	sqlite3_stmt* stmt2 = NULL;
+    int rc = 0;
+	DIR* d;
+	struct dirent* dir;
+	d = opendir(path);
+	if (d == NULL) {
+		printf("Couldn't open directory\n");
+		sqlite3_close(db);
+		exit(-1);
+	}
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_type == DT_DIR) { // recursively traverse through directories
+            char filePath[1024];
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+                continue;
+            snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
+            populateTransformer2(db, filePath);
+        }
+        if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
+            char* filename = strdup(dir->d_name);
+            //char* filename = "}
+			if (!filename) {
+				handle_error(db, "strdup error");
+				closedir(d);
+				exit(-1);
+			}
+			printf("filename: %s\n", filename);
+            size_t needed = snprintf(NULL, 0, "INSERT OR IGNORE INTO Transformer2 (`Xformer Name`, `Winding 1`, `Winding 2`, `Xfmr ID`, `MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `RateA Winding 1`, `RateB Winding 1`, `RateC Winding 1`, `RateA Winding 2`, `RateB Winding 2`, `RateC Winding 2`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			char* sql_str = malloc(needed);
+            if (sql_str == NULL) {
+				printf("malloc failed\n");
+				exit(-1);
+            }
+
+            snprintf(sql_str, needed, "INSERT OR IGNORE INTO Transformer2 (`Xformer Name`, `Winding 1`, `Winding 2`, `Xfmr ID`, `MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `RateA Winding 1`, `RateB Winding 1`, `RateC Winding 1`, `RateA Winding 2`, `RateB Winding 2`, `RateC Winding 2`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			rc = sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
+            if (rc != SQLITE_OK) {
+				handle_error(db, "prepare error1");
+				exit(-1);
+            }
+
+			char* contingency = getContingency(filename);
+			printf("contingency: %s\n", contingency);
+			char* scenario = getScenario(filename);
+
+            size_t needed2 = snprintf(NULL, 0, "INSERT OR IGNORE INTO `Transformer2 Simulation Results` (`Scenario Name`, `Contingency Name`, `Xformer Name`, `stat`, `p_winding 1`, `p_winding 2`, `q_winding 1`, `q_winding 2`, `amp_winding1`, `amp_winding2`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			char* sql_str2 = malloc(needed2);
+            if (sql_str2 == NULL) {
+				printf("malloc failed\n");
+				exit(-1);
+            }
+            snprintf(sql_str2, needed2, "INSERT OR IGNORE INTO `Transformer2 Simulation Results` (`Scenario Name`, `Contingency Name`, `Xformer Name`, `stat`, `p_winding 1`, `p_winding 2`, `q_winding 1`, `q_winding 2`, `amp_winding1`, `amp_winding2`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			rc = sqlite3_prepare_v2(db, sql_str2, -1, &stmt2, NULL);
+			if (rc != SQLITE_OK) {
+				handle_error(db, "prepare error2");
+				exit(-1);
+            }
+			char* line = malloc(1024);
+			char filePath[1024];
+			snprintf(filePath, sizeof(filePath), ".\\Thermal2winding\\%s", dir->d_name);
+			FILE* file = fopen(filePath, "r");
+            if (file == NULL) {
+				printf("Couldn't open file\n");
+				sqlite3_close(db);
+				exit(-1);
+            }
+			fgets(line, 1024, file); // gets rid of column name
+			printf("line: %s\n", line);
+            while (fgets(line, 1024, file) != NULL) {
+				printf("line: %s\n", line);
+				size_t line_size = snprintf(NULL, 0, line) + 2;
+				char* space = malloc(line_size);
+				space[0] = '$';
+				space[1] = '\0';
+                printf("lin1e: %s\n", space);
+                strcat(space, line);
+				printf("line: %s\n", space);
+				char* xformer_name = strtok(space, ",");
+				char* winding1 = strtok(NULL, ",");
+				char* winding2 = strtok(NULL, ",");
+				char* xfmr_id = strtok(NULL, ",");
+				char* mva_base = strtok(NULL, ",");
+				char* winding1_nominal_kv = strtok(NULL, ",");
+				char* winding2_nominal_kv = strtok(NULL, ",");
+				char* rateA_winding1 = strtok(NULL, ",");
+				char* rateB_winding1 = strtok(NULL, ",");
+				char* rateC_winding1 = strtok(NULL, ",");
+				char* rateA_winding2 = strtok(NULL, ",");
+				char* rateB_winding2 = strtok(NULL, ",");
+				char* rateC_winding2 = strtok(NULL, ",");
+				char* p_winding1 = strtok(NULL, ",");
+				char* p_winding2 = strtok(NULL, ",");
+				char* q_winding1 = strtok(NULL, ",");
+				char* q_winding2 = strtok(NULL, ",");
+				char* amp_winding1 = strtok(NULL, ",");
+				char* amp_winding2 = strtok(NULL, ",");
+				char* ploss = strtok(NULL, ",");
+				char* qloss = strtok(NULL, ",");
+				char* stat = strtok(NULL, ",");
+				char* violate = strtok(NULL, ",");
+				char* exception = strtok(NULL, ",");
+
+				printf("xformer_name: %s\n", xformer_name);
+                if (xformer_name[0] == '$') {
+                    memset(xformer_name, 0, strlen(xformer_name));
+
+                    strcat(xformer_name, winding1);
+                    strcat(xformer_name, ":");
+                    strcat(xformer_name, winding2);
+                    strcat(xformer_name, ":");
+					strcat(xformer_name, xfmr_id);
+				}
+				printf("winding1: %s\n", winding1);
+				printf("winding2: %s\n", winding2);
+				printf("xfmr_id: %s\n", xfmr_id);
+				printf("mva_base: %s\n", mva_base);
+				printf("winding1_nominal_kv: %s\n", winding1_nominal_kv);
+				printf("winding2_nominal_kv: %s\n", winding2_nominal_kv);
+				printf("rateA_winding1: %s\n", rateA_winding1);
+				printf("rateB_winding1: %s\n", rateB_winding1);
+				printf("rateC_winding1: %s\n", rateC_winding1);
+				printf("rateA_winding2: %s\n", rateA_winding2);
+				printf("rateB_winding2: %s\n", rateB_winding2);
+				printf("rateC_winding2: %s\n", rateC_winding2);
+				printf("p_winding1: %s\n", p_winding1);
+				printf("p_winding2: %s\n", p_winding2);
+				printf("q_winding1: %s\n", q_winding1);
+				printf("q_winding2: %s\n", q_winding2);
+				printf("amp_winding1: %s\n", amp_winding1);
+				printf("amp_winding2: %s\n", amp_winding2);
+				printf("ploss: %s\n", ploss);
+				printf("qloss: %s\n", qloss);
+				printf("stat: %s\n", stat);
+				printf("violate: %s\n", violate);
+				printf("exception: %s\n", exception);
+                
+				sqlite3_bind_text(stmt, 1, xformer_name, -1, SQLITE_STATIC);
+				sqlite3_bind_int64(stmt, 2, atoi(winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_int64(stmt, 3, atoi(winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_text(stmt, 4, xfmr_id, -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 5, atof(mva_base), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 6, atof(winding1_nominal_kv), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 7, atof(winding2_nominal_kv), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 8, atof(rateA_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 9, atof(rateB_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 10, atof(rateC_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 11, atof(rateA_winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 12, atof(rateB_winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt, 13, atof(rateC_winding2), -1, SQLITE_STATIC);
+				rc = sqlite3_step(stmt);
+                if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+                    handle_error(db, "step error");
+                    sqlite3_close(db);
+                    exit(-1);
+                }
+                sqlite3_reset(stmt);
+                sqlite3_clear_bindings(stmt);
+
+				sqlite3_bind_text(stmt2, 1, scenario, -1, SQLITE_STATIC);
+				sqlite3_bind_text(stmt2, 2, contingency, -1, SQLITE_STATIC);
+				sqlite3_bind_text(stmt2, 3, xformer_name, -1, SQLITE_STATIC);
+				sqlite3_bind_int(stmt2, 4, atoi(stat), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 5, atof(p_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 6, atof(p_winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 7, atof(q_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 8, atof(q_winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 9, atof(amp_winding1), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 10, atof(amp_winding2), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 11, atof(ploss), -1, SQLITE_STATIC);
+				sqlite3_bind_double(stmt2, 12, atof(qloss), -1, SQLITE_STATIC);
+				if (violate == NULL) {
+					sqlite3_bind_int(stmt2, 13, 0, SQLITE_STATIC);
+				}
+				else {
+					sqlite3_bind_int(stmt2, 13, atoi(violate), -1, SQLITE_STATIC);
+				}
+
+				if (exception == NULL) {
+					sqlite3_bind_int(stmt2, 14, 0, SQLITE_STATIC);
+				}
+				else {
+					sqlite3_bind_int(stmt2, 14, atoi(exception), -1, SQLITE_STATIC);
+				}
+				rc = sqlite3_step(stmt2);
+                if ((rc != SQLITE_DONE) && (rc != SQLITE_ROW)) {
+					handle_error(db, "step error"); 
+					sqlite3_close(db);
+					exit(-1);
+                }
+				sqlite3_reset(stmt2);
+				sqlite3_clear_bindings(stmt2);
+
+            }
+            fclose(file);
+            stmt = NULL;
+            stmt2 = NULL;
+            free(sql_str);
+            free(sql_str2);
+            free(line);
+            sqlite3_finalize(stmt);
+            sqlite3_finalize(stmt2);
+        }
+    }
+    closedir(d);
+}
 int main(int argc, char* argv[]) {
     char* file = "database2.db";
     sqlite3* db = NULL;
@@ -689,22 +895,37 @@ int main(int argc, char* argv[]) {
     }
 
     // initializing tables
+  //  const char* queries[] = {
+  //      "DROP TABLE IF EXISTS Scenarios;",
+  //      "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
+  //      "DROP TABLE IF EXISTS Contingency;",
+		//"CREATE TABLE Contingency (`Contingency Name` TEXT PRIMARY KEY, `NERC Category` TEXT);",
+  //      "DROP TABLE IF EXISTS BUS;",
+  //      "CREATE TABLE BUS (`Bus Number` INT PRIMARY KEY, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
+  //      "DROP TABLE IF EXISTS `Bus Simulation Results`;",
+  //      "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
+		//"DROP TABLE IF EXISTS Branch;",
+		//"CREATE TABLE Branch (`Branch Name` TEXT PRIMARY KEY, `Metered Bus Number` INT, `Other Bus Number` INT, `Bus ID` TEXT, `Voltage Base` FLOAT, `RateA sum` FLOAT, `RateB sum` FLOAT, `RateC sum` FLOAT, `RateA win` FLOAT, `RateB win` FLOAT, `RateC win` FLOAT);",
+		//"DROP TABLE IF EXISTS `Branch Simulation Results`;",
+		//"CREATE TABLE `Branch Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Branch Name` TEXT, `stat` INT, `p_metered` FLOAT, `p_other` FLOAT, `q_metered` FLOAT, `q_other` FLOAT, `amp_angle_metered` FLOAT, `amp_angle_other` FLOAT, `amp_metered` FLOAT, `amp_other` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Branch Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Branch Name`) REFERENCES Branch (`Branch Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
+  //      "DROP TABLE IF EXISTS Transformer2;",
+        // "CREATE TABLE Transformer2 (`Xformer Name` TEXT PRIMARY KEY, `Winding 1` INT, `Winding 2` INT, `Xfmr ID` TEXT, `MVA Base` FLOAT, `Winding 1 nominal KV` FLOAT, `Winding 2 nominal KV` FLOAT, `RateA Winding 1` FLOAT, `RateB Winding 1` FLOAT, `RateC Winding 1` FLOAT, `RateA Winding 2` FLOAT, `RateB Winding 2` FLOAT, `RateC Winding 2` FLOAT, `Tap Limit min` FLOAT, `Tap Limit max` FLOAT, `Tap Steps` INT);",
+      //  "DROP TABLE IF EXISTS `Transformer2 Simulation Results`;",
+     //   "CREATE TABLE `Transformer2 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `stat` INT, `p_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 1` FLOAT, `q_winding 2` FLOAT, `amp_winding1` FLOAT, `amp_winding2` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer2 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
+  // 
+  // 
+  // 
+  // 
+  //  };
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
         "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
         "DROP TABLE IF EXISTS Contingency;",
-		"CREATE TABLE Contingency (`Contingency Name` TEXT PRIMARY KEY, `NERC Category` TEXT);",
-        "DROP TABLE IF EXISTS BUS;",
-        "CREATE TABLE BUS (`Bus Number` INT PRIMARY KEY, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
-        "DROP TABLE IF EXISTS `Bus Simulation Results`;",
-        "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
-		"DROP TABLE IF EXISTS Branch;",
-		"CREATE TABLE Branch (`Branch Name` TEXT PRIMARY KEY, `Metered Bus Number` INT, `Other Bus Number` INT, `Bus ID` TEXT, `Voltage Base` FLOAT, `RateA sum` FLOAT, `RateB sum` FLOAT, `RateC sum` FLOAT, `RateA win` FLOAT, `RateB win` FLOAT, `RateC win` FLOAT);",
-		"DROP TABLE IF EXISTS `Branch Simulation Results`;",
-		"CREATE TABLE `Branch Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Branch Name` TEXT, `stat` INT, `p_metered` FLOAT, `p_other` FLOAT, `q_metered` FLOAT, `q_other` FLOAT, `amp_angle_metered` FLOAT, `amp_angle_other` FLOAT, `amp_metered` FLOAT, `amp_other` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Branch Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Branch Name`) REFERENCES Branch (`Branch Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
-    };
+        "CREATE TABLE Contingency (`Contingency Name` TEXT PRIMARY KEY, `NERC Category` TEXT, `Date Last Modified` TEXT);",
+            };
     sqlite3_stmt* stmt = NULL;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 4; i++) {
+		printf("i: %d\n", i);
         stmt = NULL;
         rc = sqlite3_prepare_v2(db, queries[i], -1, &stmt, NULL);
         if (rc != SQLITE_OK) {
@@ -719,9 +940,10 @@ int main(int argc, char* argv[]) {
         sqlite3_finalize(stmt);
     }
 
-	populateScenCont(db, ".");
-	populateBusTables(db, "./Voltage");
-	populateBranchTables(db, "./ThermalBranch");
+	//populateScenCont(db, ".");
+	//populateBusTables(db, "./Voltage");
+	//populateBranchTables(db, "./ThermalBranch");
+	populateTransformer2(db, "./Thermal2winding");
     
 	return 0;
 }
