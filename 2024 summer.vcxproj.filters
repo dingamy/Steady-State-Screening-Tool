@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClCompile Include="tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sqlite-amalgamation-3450300\shell.c">
@@ -652,8 +652,9 @@
     <None Include="thermalbranch\Base-sum2030-LGspcHH%40System-Intact-branch.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="contacts.csv" />
     <None Include="packages.config" />
-    <None Include="sql.sql" />
+    <None Include="app.py" />
+    <None Include="main.py" />
+    <None Include="latex.py" />
   </ItemGroup>
 </Project>

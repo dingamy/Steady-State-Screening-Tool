@@ -89,11 +89,14 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;C:\msys64\mingw64\include\gtk-4.0</AdditionalIncludeDirectories>
+      <AdditionalOptions>/IC:/msys64/mingw64/include/gtk-4.0 /IC:/msys64/mingw64/include/pango-1.0 /IC:/msys64/mingw64/include/fribidi /IC:/msys64/mingw64/include/harfbuzz /IC:/msys64/mingw64/include/gdk-pixbuf-2.0 /IC:/msys64/mingw64/include/webp /DLIBDEFLATE_DLL /IC:/msys64/mingw64/include/cairo /IC:/msys64/mingw64/include/freetype2 /IC:/msys64/mingw64/include/libpng16 /IC:/msys64/mingw64/include/pixman-1 /IC:/msys64/mingw64/include/graphene-1.0 /IC:/msys64/mingw64/lib/graphene-1.0/include /IC:/msys64/mingw64/include/glib-2.0 /IC:/msys64/mingw64/lib/glib-2.0/include %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>C:\msys64\mingw64\lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,17 +116,20 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;C:\msys64\mingw64\include\gtk-4.0</AdditionalIncludeDirectories>
+      <AdditionalOptions>/IC:/msys64/mingw64/include/gtk-4.0 /IC:/msys64/mingw64/include/pango-1.0 /IC:/msys64/mingw64/include/fribidi /IC:/msys64/mingw64/include/harfbuzz /IC:/msys64/mingw64/include/gdk-pixbuf-2.0 /IC:/msys64/mingw64/include/webp /DLIBDEFLATE_DLL /IC:/msys64/mingw64/include/cairo /IC:/msys64/mingw64/include/freetype2 /IC:/msys64/mingw64/include/libpng16 /IC:/msys64/mingw64/include/pixman-1 /IC:/msys64/mingw64/include/graphene-1.0 /IC:/msys64/mingw64/lib/graphene-1.0/include /IC:/msys64/mingw64/include/glib-2.0 /IC:/msys64/mingw64/lib/glib-2.0/include %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\msys64\mingw64\lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.c" />
+    <ClCompile Include="tables.c" />
     <ClCompile Include="sqlite-amalgamation-3450300\shell.c" />
     <ClCompile Include="sqlite-amalgamation-3450300\sqlite3.c" />
   </ItemGroup>
@@ -134,9 +140,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".vs\steady state\v17\workspaceFileList.bin" />
-    <None Include="contacts.csv" />
+    <None Include="app.py" />
+    <None Include="latex.py" />
+    <None Include="main.py" />
     <None Include="packages.config" />
-    <None Include="sql.sql" />
     <None Include="thermalbranch\Base-sum2030-LG%40BRNDSHUNT-branch.bin" />
     <None Include="thermalbranch\Base-sum2030-LG%40P1#A4D-branch.bin" />
     <None Include="thermalbranch\Base-sum2030-LG%40P1#A6V-branch.bin" />
