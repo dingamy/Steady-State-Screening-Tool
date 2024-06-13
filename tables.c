@@ -346,6 +346,7 @@ void populateBusTables(sqlite3* db, char* path) {
                 char* owner = strtok(NULL, ",");
                 char* voltage_base = strtok(NULL, ",");
                 char* criteria_nlo = strtok(NULL, ",");
+                printf("criteria_nlo: %s\n", criteria_nlo);
                 char* criteria_nhi = strtok(NULL, ",");
                 char* criteria_elo = strtok(NULL, ",");
                 char* criteria_ehi = strtok(NULL, ",");
@@ -356,13 +357,13 @@ void populateBusTables(sqlite3* db, char* path) {
                 char* exception = strtok(NULL, ",");
 
                 
-                printf("bus_number: %s\n", bus_number);
+                //printf("bus_number: %s\n", bus_number);
                 //printf("bus_name: %s\n", bus_name);
                 //printf("area: %s\n", area);
                 //printf("zone: %s\n", zone);
                 //printf("owner: %s\n", owner);
                 //printf("voltage_base: %s\n", voltage_base);
-                //printf("criteria_nlo: %s\n", criteria_nlo);
+                printf("criteria_nlo: %s\n", criteria_nlo);
                 //printf("criteria_nhi: %s\n", criteria_nhi);
                 //printf("criteria_elo: %s\n", criteria_elo);
                 //printf("criteria_ehi: %s\n", criteria_ehi);
@@ -378,7 +379,7 @@ void populateBusTables(sqlite3* db, char* path) {
                 sqlite3_bind_int(stmt, 4, atoi(zone), -1, SQLITE_STATIC);
                 sqlite3_bind_int(stmt, 5, atoi(owner), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt, 6, atof(voltage_base), -1, SQLITE_STATIC);
-                sqlite3_bind_int(stmt, 1, atoi(bus_number), -1, SQLITE_STATIC);
+                sqlite3_bind_double(stmt, 7, atof(criteria_nlo), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt, 8, atof(criteria_nhi), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt, 9, atof(criteria_elo), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt, 10, atof(criteria_ehi), -1, SQLITE_STATIC);
