@@ -118,9 +118,8 @@ class MainWindow(QMainWindow):
         geometry_options = {"margin": "2.54cm"}
         doc = Document(geometry_options=geometry_options)
        
-        doc.append(bold(NoEscape(r'\title{Steady State Contingency Analysis Report}')))
-        #doc.append(NoEscape(r'\date{\vspace{-5ex}}'))
-        doc.preamble.append(Command('date', NoEscape(r'\today')))
+        doc.preamble.append(NoEscape(r'\title{Steady State Contingency Analysis Report\vspace{-3ex}}'))
+        doc.preamble.append(NoEscape(r'\date{Report generated: \today\vspace{-2ex}}'))
         doc.append(NoEscape(r'\maketitle'))
         #doc.append(NoEscape(r'\noindent'))
        # doc.append(LargeText(bold("Steady State Contingency Analysis Report")))
