@@ -107,8 +107,8 @@ class MainWindow(QMainWindow):
         query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
         cursor.execute(query)
         self.num_thermalbranch = cursor.fetchall()[0][0]
-
-        self.display_report()
+        self.generate_report()
+        #self.display_report()
        
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
@@ -150,7 +150,6 @@ class MainWindow(QMainWindow):
                 else:
                     self.doc.append("No violations.")
 
-        
 
     def save_report(self):
         self.doc.generate_pdf('report', clean_tex=False)
@@ -159,17 +158,10 @@ class MainWindow(QMainWindow):
     def display_report(self):
         self.generate_report()
         self.doc.generate_tex('tex')
-        #f = open("tex.tex", "r")
-        #latex_text = f.read()
-        #print(latex_text)
-
-                
-      
         with open("tex.tex", 'r', encoding='utf-8') as file:
             lines = file.readlines()
             latex_content = ""
             #for line in lines:
-                
                # line = line.replace("%", "")
                 #latex_content += line
                 ##print(line)
@@ -180,7 +172,7 @@ class MainWindow(QMainWindow):
             #image = self.pdf_to_image('tex.pdf')
             #self.text_edit.setPixmap(image)
             
-        image = self.latex_to_img(r'\frac{x}{y^2}')
+        image = self.latex_to_image(r'\frac{x}{y^2}')
             #self.text_edit.setText(latex_content)
         #rendered_content = self.render_latex(tex_content)
         #self.text_edit.setHtml(rendered_content)
@@ -189,35 +181,35 @@ class MainWindow(QMainWindow):
            # self.text_edit.setPixmap(image)
 
         #delete tex.tex here
-    def latex_to_img(self, tex):
-        buf = io.BytesIO()
-        plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
-        plt.axis('off')
-        plt.text(0.05, 0.5, f'${tex}$', size=40)
-        plt.savefig(buf, format='png')
-        plt.close()
-
-        im = Image.open(buf)
-        bg = Image.new(im.mode, im.size, white)
-        diff = ImageChops.difference(im, bg)
-        diff = ImageChops.add(diff, diff, 2.0, -100)
-        bbox = diff.getbbox()
-        return im.crop(bbox)
 
     def latex_to_image(self, latex_text):
+        latex_expression = r"$e^{i\pi}+1=0$"
+        fig = plt.figure(figsize=(3, 0.5))  # Dimensions of figsize are in inches
+        text = fig.text(
+            x=0.5,  # x-coordinate to place the text
+            y=0.5,  # y-coordinate to place the text
+            s=latex_expression,
+            horizontalalignment="center",
+            verticalalignment="center",
+            fontsize=16,
+        )
+
+        plt.show()
+        #def latex_to_image(self, latex_text):
+        '''
         plt.clf()
         plt.rcParams['text.usetex'] = True
         plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
-        print("latex_text", latex_text)
+       
         fig, ax = plt.subplots()
         
         ax.text(0.5, 0.5, f"{latex_text}", fontsize=12)
         ax.axis('off')
         #print(ax.text);
-        
+        plt.show()
         buf = io.BytesIO()
-        '''
+        print("latex_text", latex_text)
+        
         plt.savefig(buf, format="png")
         buf.seek(0)
         
@@ -226,24 +218,7 @@ class MainWindow(QMainWindow):
         buf.close()
         return image
 		'''
-
-    def pdf_to_image(self, pdf_path):
-    # Open the PDF file
-       # doc = fitz.open(pdf_path)
-    
-        # Get the first page
-        page = doc.load_page(0)
-
-        # Convert the first page to an image
-        pix = page.get_pixmap()
-    
-        # Create a QPixmap from the image data
-        image = QPixmap()
-        image.loadFromData(pix.tobytes("png"), "PNG")
-    
-        return image
-        
-
+       
     def done_alert(self):
         dialog = QMessageBox(self)
         dialog.setWindowTitle("=^.^=")
