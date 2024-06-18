@@ -1,22 +1,17 @@
 import sys
 import sqlite3
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QLineEdit, QVBoxLayout, QMenu, QHBoxLayout, QGridLayout, QStackedLayout, QTableWidget, QTableWidgetItem
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QUrl
 from PyQt6.QtGui import QAction, QPixmap, QPalette, QColor
-import numpy as np
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib import pyplot as plt
 from pylatex import Document, Section, Subsection, Command, Tabular, LongTable, PageStyle, Head, LargeText, MediumText, LineBreak, MiniPage, MultiColumn, Tabularx, HugeText
 from pylatex.utils import italic, NoEscape, bold
 import os
 import io
 import subprocess
-import matplotlib.pyplot as plt
-import io
-from PIL import Image, ImageChops
+import pypandoc
 
 from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QCheckBox, QComboBox, QListWidget, QLineEdit, QLineEdit, QSpinBox, QDoubleSpinBox, QSlider, QMessageBox, QTextEdit
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -31,29 +26,34 @@ class MainWindow(QMainWindow):
         self.bus_data = []
         self.branch_data = []
         self.doc = ""
-
-        self.layout = QGridLayout()
+        self.vlayout = QVBoxLayout()
+        self.vlayout2 = QVBoxLayout()
+        self.hlayout = QHBoxLayout()
         self.scenario_cb = QComboBox()
         self.add_data_to_combobox("database.db", self.scenario_cb, "`Scenario Name`", "Scenarios")
         self.contingency_cb = QComboBox()
         self.add_data_to_combobox("database.db", self.contingency_cb, "`Contingency Name`", "Contingency")
         report = QPushButton("Generate Report")
         report.clicked.connect(self.retrieve_data)
-        self.layout.addWidget(QLabel('Scenario'), 0, 0)
-        self.layout.addWidget(self.scenario_cb, 1, 0)
-        self.layout.addWidget(QLabel('Contingency'), 2, 0)
-        self.layout.addWidget(self.contingency_cb, 3, 0)
-        self.layout.addWidget(report, 4, 0)
+        self.vlayout.addWidget(QLabel('Scenario'))
+        self.vlayout.addWidget(self.scenario_cb)
+        self.vlayout.addWidget(QLabel('Contingency'))
+        self.vlayout.addWidget(self.contingency_cb)
+        self.vlayout.addWidget(report)
         self.text_edit = QLabel()
-        self.layout.addWidget(QLabel("Report"), 0, 1)
-        self.layout.addWidget(self.text_edit, 1, 1,)
+        self.webView = QWebEngineView()
+        self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PluginsEnabled, True)
+        self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PdfViewerEnabled, True)
+        self.vlayout2.addWidget(QLabel("Report"))
+        self.vlayout2.addWidget(self.webView)
 
         report_button = QPushButton("Save to Computer")
         report_button.clicked.connect(self.save_report)
-        self.layout.addWidget(report_button, 4, 1)
-
+        self.vlayout2.addWidget(report_button)
+        self.hlayout.addLayout(self.vlayout)
+        self.hlayout.addLayout(self.vlayout2)
         widget = QWidget()
-        widget.setLayout(self.layout)
+        widget.setLayout(self.hlayout)
         self.setCentralWidget(widget)
         
     def add_data_to_combobox(self, db, combobox, column, table):
@@ -109,7 +109,9 @@ class MainWindow(QMainWindow):
         self.num_thermalbranch = cursor.fetchall()[0][0]
         self.generate_report()
         #self.display_report()
-       
+        self.doc.generate_tex("tex")
+        self.display_report("tex.tex")
+      
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
@@ -150,74 +152,18 @@ class MainWindow(QMainWindow):
                 else:
                     self.doc.append("No violations.")
 
+    def display_report(self, tex_file):
+        output = pypandoc.convert_file(tex_file, 'html', format='latex')
+    # Write the output to the HTML file
+        with open("report.html", 'w') as f:
+            f.write(output)
+        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "report.html"))
+        local_url = QUrl.fromLocalFile(file_path)
+        self.webView.setUrl(local_url)
 
     def save_report(self):
         self.doc.generate_pdf('report', clean_tex=False)
         self.done_alert()
-
-    def display_report(self):
-        self.generate_report()
-        self.doc.generate_tex('tex')
-        with open("tex.tex", 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-            latex_content = ""
-            #for line in lines:
-               # line = line.replace("%", "")
-                #latex_content += line
-                ##print(line)
-            #print(latex_content)
-            #subprocess.run(['pdflatex', 'tex.tex'], check=True)
-            #latex_content = file.read()
-            #print("haiii")
-            #image = self.pdf_to_image('tex.pdf')
-            #self.text_edit.setPixmap(image)
-            
-        image = self.latex_to_image(r'\frac{x}{y^2}')
-            #self.text_edit.setText(latex_content)
-        #rendered_content = self.render_latex(tex_content)
-        #self.text_edit.setHtml(rendered_content)
-        # Convert LaTeX to image
-        #image = self.latex_to_image(latex_text)
-           # self.text_edit.setPixmap(image)
-
-        #delete tex.tex here
-
-    def latex_to_image(self, latex_text):
-        latex_expression = r"$e^{i\pi}+1=0$"
-        fig = plt.figure(figsize=(3, 0.5))  # Dimensions of figsize are in inches
-        text = fig.text(
-            x=0.5,  # x-coordinate to place the text
-            y=0.5,  # y-coordinate to place the text
-            s=latex_expression,
-            horizontalalignment="center",
-            verticalalignment="center",
-            fontsize=16,
-        )
-
-        plt.show()
-        #def latex_to_image(self, latex_text):
-        '''
-        plt.clf()
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
-       
-        fig, ax = plt.subplots()
-        
-        ax.text(0.5, 0.5, f"{latex_text}", fontsize=12)
-        ax.axis('off')
-        #print(ax.text);
-        plt.show()
-        buf = io.BytesIO()
-        print("latex_text", latex_text)
-        
-        plt.savefig(buf, format="png")
-        buf.seek(0)
-        
-        image = QPixmap()
-        image.loadFromData(buf.getvalue(), "PNG")
-        buf.close()
-        return image
-		'''
        
     def done_alert(self):
         dialog = QMessageBox(self)
@@ -229,4 +175,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
     w.show()
+
+
     app.exec()
