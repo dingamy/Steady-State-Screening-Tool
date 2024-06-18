@@ -6,6 +6,7 @@
 \usepackage{lastpage}%
 \usepackage{geometry}%
 \geometry{margin=2.54cm}%
+\usepackage{tabularx}%
 %
 \title{Steady State Contingency Analysis Report\vspace{-3ex}}%
 \date{Report generated: \today\vspace{-2ex}}%
@@ -13,8 +14,8 @@
 \begin{document}%
 \normalsize%
 \maketitle%
-\section*{Contingency: None (Islands created: ?)}%
-\label{sec:ContingencyNone(Islandscreated?)}%
+\section*{Contingency: BRNDSHUNT (Islands created: ?)}%
+\label{sec:ContingencyBRNDSHUNT(Islandscreated?)}%
 \subsection*{Total number of monitored buses: 457}%
 \label{subsec:Totalnumberofmonitoredbuses457}%
 No violations.
@@ -22,7 +23,25 @@ No violations.
 %
 \subsection*{Total number of monitored branches: 555}%
 \label{subsec:Totalnumberofmonitoredbranches555}%
-No violations.
+\begin{tabularx}{\textwidth}{| p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |}%
+\hline%
+\multicolumn{8}{|c|}{Branch Thermal Violations}\\%
+\hline%
+Branch Name&Metered End&Other End&Branch ID&Voltage Class (kV)&Rating (Amps)&Metered End Loading (Amps)&Other End Loading (Amps)\\%
+\hline%
+667000:667001:1&667000&667001&1&230.0&1457.93&525.44&523.65\\%
+\hline%
+667001:667002:5&667001&667002&5&230.0&855.98&13.27&13.95\\%
+\hline%
+667012:667001:1&667012&667001&1&230.0&1393.92&791.09&788.39\\%
+\hline%
+667012:667001:3&667012&667001&3&230.0&1152.94&791.09&788.39\\%
+\hline%
+L3{-}2&667012&667106&3&230.0&876.07&495.19&495.18\\%
+\hline%
+R26K&667016&667017&1&230.0&664.96&14.89&46.61\\%
+\hline%
+\end{tabularx}
 
 %
 \end{document}

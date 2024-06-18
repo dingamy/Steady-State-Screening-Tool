@@ -1,17 +1,10 @@
-import sys
-import sqlite3
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QLineEdit, QVBoxLayout, QMenu, QHBoxLayout, QGridLayout, QStackedLayout, QTableWidget, QTableWidgetItem, QSizePolicy
-from PyQt6.QtCore import QSize, Qt, QUrl
-from PyQt6.QtGui import QAction, QPixmap, QPalette, QColor
-from pylatex import Document, Section, Subsection, Command, Tabular, LongTable, PageStyle, Head, LargeText, MediumText, LineBreak, MiniPage, MultiColumn, Tabularx, HugeText
-from pylatex.utils import italic, NoEscape, bold
-import os
-import io
-import subprocess
-import pypandoc
-
-from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QCheckBox, QComboBox, QListWidget, QLineEdit, QLineEdit, QSpinBox, QDoubleSpinBox, QSlider, QMessageBox, QTextEdit, QSpacerItem
+import sys, os, pypandoc, sqlite3
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy
+from PyQt6.QtCore import QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
+from pylatex import Document, Section, Subsection, Tabularx, MultiColumn
+from pylatex.utils import NoEscape
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -26,47 +19,49 @@ class MainWindow(QMainWindow):
         self.bus_data = []
         self.bus_data2 = []
         self.branch_data = []
-        self.doc = ""
-        self.vlayout = QVBoxLayout()
-    
-        self.vlayout2 = QVBoxLayout()
-        self.hlayout = QHBoxLayout()
-        self.scenario_cb = QComboBox()
+        geometry_options = {"margin": "2.54cm"}
+        self.doc = Document(geometry_options=geometry_options)
+        self.setMinimumSize(800,600)
 
+        vlayout = QVBoxLayout()
+        vlayout2 = QVBoxLayout()
+        hlayout = QHBoxLayout()
+
+        self.scenario_cb = QComboBox()
         self.add_data_to_combobox("database.db", self.scenario_cb, "`Scenario Name`", "Scenarios")
         self.contingency_cb = QComboBox()
-  
         self.add_data_to_combobox("database.db", self.contingency_cb, "`Contingency Name`", "Contingency")
+
         report = QPushButton("Generate Report")
         report.clicked.connect(self.retrieve_data)
         
         scenario_label = QLabel('Scenario')
         scenario_label.setMaximumHeight(15)
-        self.vlayout.addWidget(scenario_label)
-        self.vlayout.addWidget(self.scenario_cb)
+        vlayout.addWidget(scenario_label)
+        vlayout.addWidget(self.scenario_cb)
         contingency_label = QLabel('Contingency')
         contingency_label.setMaximumHeight(15)
-        self.vlayout.addWidget(contingency_label)
-        self.vlayout.addWidget(self.contingency_cb)
-        self.vlayout.addWidget(report)
+        vlayout.addWidget(contingency_label)
+        vlayout.addWidget(self.contingency_cb)
+        vlayout.addWidget(report)
         verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.vlayout.addItem(verticalSpacer)
+        vlayout.addItem(verticalSpacer)
         self.webView = QWebEngineView()
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PluginsEnabled, True)
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PdfViewerEnabled, True)
         report_label = QLabel('Report')
         report_label.setMaximumHeight(15)
 
-        self.vlayout2.addWidget(report_label)
-        self.vlayout2.addWidget(self.webView)
+        vlayout2.addWidget(report_label)
+        vlayout2.addWidget(self.webView)
 
         report_button = QPushButton("Save to Computer")
         report_button.clicked.connect(self.save_report)
-        self.vlayout2.addWidget(report_button)
-        self.hlayout.addLayout(self.vlayout, 1)
-        self.hlayout.addLayout(self.vlayout2, 2)
+        vlayout2.addWidget(report_button)
+        hlayout.addLayout(vlayout, 1)
+        hlayout.addLayout(vlayout2, 2)
         widget = QWidget()
-        widget.setLayout(self.hlayout)
+        widget.setLayout(hlayout)
         self.setCentralWidget(widget)
         
     def add_data_to_combobox(self, db, combobox, column, table):
@@ -131,9 +126,7 @@ class MainWindow(QMainWindow):
             self.display_report("tex.tex")
       
     def generate_report(self):
-        geometry_options = {"margin": "2.54cm"}
-        self.doc = Document(geometry_options=geometry_options)
-       
+
         self.doc.preamble.append(NoEscape(r'\title{Steady State Contingency Analysis Report\vspace{-3ex}}'))
         self.doc.preamble.append(NoEscape(r'\date{Report generated: \today\vspace{-2ex}}'))
         self.doc.append(NoEscape(r'\maketitle'))
@@ -142,31 +135,38 @@ class MainWindow(QMainWindow):
 
             with self.doc.create(Subsection(f"Total number of monitored buses: {self.num_voltage}", False)):
                 if (len(self.bus_data) != 0):
-                    #with doc.create(Tabularx('| p{2cm} | p{3.68cm} | p{1.6cm} | p{2.30cm} | p{2.30cm} | p{2.30cm} |')) as bus_table:
-                    with self.doc.create(Tabularx('|X|X|X|X|X|X|', width_argument=NoEscape(r'\columnwidth'))) as bus_table:
+                    with self.doc.create(Tabularx('| p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |')) as bus_table:
+                        
+                    #with self.doc.create(Tabularx('|X|X|X|X|X|X|', width_argument=NoEscape(r'\columnwidth'))) as bus_table:
+                        bus_table.add_hline()
+                        bus_table.add_row([MultiColumn(6, align='|c|', data="Bus Voltage Violations")])
                         bus_table.add_hline()
                         bus_table.add_row(["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"])
-                        bus_table.add_hline()
                     
                         for i in range(len(self.bus_data)):
                             bus_table.add_hline()
-                            bus_table.add_row(self.bus_data[i][0], self.bus_data[i][2], self.bus_data[i][3], self.bus_data[i][4], self.bus_data[i][5], self.bus_data[i][1])
+                            bus_table.add_row(self.bus_data[i][0], self.bus_data[i][2], self.bus_data[i][3], round(self.bus_data[i][4], 2), round(self.bus_data[i][5], 2), round(self.bus_data[i][1], 2))
                         bus_table.add_hline()
                 else:
                     self.doc.append("No violations.")
                
             with self.doc.create(Subsection(f"Total number of monitored branches: {self.num_thermalbranch}", False)):
                 if (len(self.branch_data) != 0):
-                    #with doc.create(Tabularx('| p{1.7725cm} | p{1.7725cm} | p{1.7725cm} | p{1.7725cm} | p{1.7725cm} | p{1.7725cm} | p{1.7725cm} | p{1.7725cm} |')) as branch_table:
-                    with self.doc.create(Tabularx('|X|X|X|X|X|X|X|X|', width_argument=NoEscape(r'\columnwidth'))) as branch_table:
+                    total_width = NoEscape(r'\textwidth')
+                    with self.doc.create(Tabularx('| p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |')) as branch_table:
+                    #with self.doc.create(Tabularx("|c|c|c|c|c|c|c|c|", NoEscape(r'\textwidth'))) as branch_table:
+
+                    
+                        branch_table.add_hline()
+                        branch_table.add_row([MultiColumn(8, align='|c|', data="Branch Thermal Violations")])
                         branch_table.add_hline()
                         branch_table.add_row(["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"])
-                        branch_table.add_hline()
                     
                         for i in range(len(self.branch_data)):
                             branch_table.add_hline()
-                            branch_table.add_row(self.branch_data[i][0], self.branch_data[i][3], self.branch_data[i][4], self.branch_data[i][5], self.branch_data[i][6], self.branch_data[i][8] if self.season == "Winter" else self.branch_data[i][7], self.branch_data[i][1], self.branch_data[i][2])
+                            branch_table.add_row(self.branch_data[i][0], self.branch_data[i][3], self.branch_data[i][4], self.branch_data[i][5], self.branch_data[i][6], round(self.branch_data[i][8], 2) if self.season == "Winter" else round(self.branch_data[i][7], 2), round(self.branch_data[i][1], 2), round(self.branch_data[i][2], 2))
                         branch_table.add_hline()
+                    
                 else:
                     self.doc.append("No violations.")
     
@@ -194,6 +194,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
     w.show()
-
-
     app.exec()
