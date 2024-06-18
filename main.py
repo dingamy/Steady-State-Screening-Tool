@@ -114,19 +114,16 @@ class MainWindow(QMainWindow):
             cursor.execute(query)
             self.branch_data = cursor.fetchall()
 
-            for i in range(len(self.branch_data)):
-                query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
-                cursor.execute(query)
-                branch_result_part = cursor.fetchall()
-                self.branch_data[i] += branch_result_part[0]
-            query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+        for i in range(len(self.branch_data)):
+            query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
             cursor.execute(query)
-            self.num_thermalbranch = cursor.fetchall()[0][0]
-            self.generate_report()
-            #self.display_report()
-            self.doc.generate_tex("tex")
-            self.display_report("report.pdf")
-      
+            branch_result_part = cursor.fetchall()
+            self.branch_data[i] += branch_result_part[0]
+        query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+        cursor.execute(query)
+        self.num_thermalbranch = cursor.fetchall()[0][0]
+        self.generate_report()
+        self.display_report("report.pdf")
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
