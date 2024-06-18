@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.add_data_to_combobox("database.db", self.scenario_cb, "`Scenario Name`", "Scenarios")
         self.contingency_cb = QComboBox()
         self.add_data_to_combobox("database.db", self.contingency_cb, "`Contingency Name`", "Contingency")
-        report = QPushButton("Generate Report")
+        report = QPushButton("Generate and Save Report")
         report.clicked.connect(self.retrieve_data)
         self.vlayout.addWidget(QLabel('Scenario'))
         self.vlayout.addWidget(self.scenario_cb)
@@ -47,9 +47,6 @@ class MainWindow(QMainWindow):
         self.vlayout2.addWidget(QLabel("Report"))
         self.vlayout2.addWidget(self.webView)
 
-        report_button = QPushButton("Save to Computer")
-        report_button.clicked.connect(self.save_report)
-        self.vlayout2.addWidget(report_button)
         self.hlayout.addLayout(self.vlayout)
         self.hlayout.addLayout(self.vlayout2)
         widget = QWidget()
@@ -108,10 +105,7 @@ class MainWindow(QMainWindow):
         cursor.execute(query)
         self.num_thermalbranch = cursor.fetchall()[0][0]
         self.generate_report()
-        #self.display_report()
-        self.doc.generate_tex("tex")
-        self.display_report("tex.tex")
-      
+        self.display_report("report.pdf")
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
@@ -151,19 +145,14 @@ class MainWindow(QMainWindow):
                         branch_table.add_hline()
                 else:
                     self.doc.append("No violations.")
+        self.doc.generate_pdf('report', clean_tex=False)
+        self.done_alert()
 
-    def display_report(self, tex_file):
-        output = pypandoc.convert_file(tex_file, 'html', format='latex')
-    # Write the output to the HTML file
-        with open("report.html", 'w') as f:
-            f.write(output)
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "report.html"))
+    def display_report(self, path):
+        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
         local_url = QUrl.fromLocalFile(file_path)
         self.webView.setUrl(local_url)
 
-    def save_report(self):
-        self.doc.generate_pdf('report', clean_tex=False)
-        self.done_alert()
        
     def done_alert(self):
         dialog = QMessageBox(self)
