@@ -60,8 +60,8 @@ class MainWindow(QMainWindow):
         self.vlayout2.addWidget(report_label)
         self.vlayout2.addWidget(self.webView)
 
-        self.hlayout.addLayout(self.vlayout)
-        self.hlayout.addLayout(self.vlayout2)
+        self.hlayout.addLayout(self.vlayout, 1)
+        self.hlayout.addLayout(self.vlayout2, 2)
         widget = QWidget()
         widget.setLayout(self.hlayout)
         self.setCentralWidget(widget)
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
             self.generate_report()
             #self.display_report()
             self.doc.generate_tex("tex")
-            self.display_report("tex.tex")
+            self.display_report("report.pdf")
       
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
