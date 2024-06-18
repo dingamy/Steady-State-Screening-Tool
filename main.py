@@ -1,6 +1,6 @@
 import sys
 import sqlite3
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QLineEdit, QVBoxLayout, QMenu, QHBoxLayout, QGridLayout, QStackedLayout, QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QLineEdit, QVBoxLayout, QMenu, QHBoxLayout, QGridLayout, QStackedLayout, QTableWidget, QTableWidgetItem, QSizePolicy
 from PyQt6.QtCore import QSize, Qt, QUrl
 from PyQt6.QtGui import QAction, QPixmap, QPalette, QColor
 from pylatex import Document, Section, Subsection, Command, Tabular, LongTable, PageStyle, Head, LargeText, MediumText, LineBreak, MiniPage, MultiColumn, Tabularx, HugeText
@@ -10,7 +10,7 @@ import io
 import subprocess
 import pypandoc
 
-from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QCheckBox, QComboBox, QListWidget, QLineEdit, QLineEdit, QSpinBox, QDoubleSpinBox, QSlider, QMessageBox, QTextEdit
+from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QCheckBox, QComboBox, QListWidget, QLineEdit, QLineEdit, QSpinBox, QDoubleSpinBox, QSlider, QMessageBox, QTextEdit, QSpacerItem
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 class MainWindow(QMainWindow):
@@ -24,34 +24,47 @@ class MainWindow(QMainWindow):
         self.num_thermalbranch = 0
         self.num_voltage = 0
         self.bus_data = []
+        self.bus_data2 = []
         self.branch_data = []
         self.doc = ""
         self.vlayout = QVBoxLayout()
+    
         self.vlayout2 = QVBoxLayout()
         self.hlayout = QHBoxLayout()
         self.scenario_cb = QComboBox()
+
         self.add_data_to_combobox("database.db", self.scenario_cb, "`Scenario Name`", "Scenarios")
         self.contingency_cb = QComboBox()
+  
         self.add_data_to_combobox("database.db", self.contingency_cb, "`Contingency Name`", "Contingency")
         report = QPushButton("Generate Report")
         report.clicked.connect(self.retrieve_data)
-        self.vlayout.addWidget(QLabel('Scenario'))
+        
+        scenario_label = QLabel('Scenario')
+        scenario_label.setMaximumHeight(15)
+        self.vlayout.addWidget(scenario_label)
         self.vlayout.addWidget(self.scenario_cb)
-        self.vlayout.addWidget(QLabel('Contingency'))
+        contingency_label = QLabel('Contingency')
+        contingency_label.setMaximumHeight(15)
+        self.vlayout.addWidget(contingency_label)
         self.vlayout.addWidget(self.contingency_cb)
         self.vlayout.addWidget(report)
-        self.text_edit = QLabel()
+        verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.vlayout.addItem(verticalSpacer)
         self.webView = QWebEngineView()
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PluginsEnabled, True)
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PdfViewerEnabled, True)
-        self.vlayout2.addWidget(QLabel("Report"))
+        report_label = QLabel('Report')
+        report_label.setMaximumHeight(15)
+
+        self.vlayout2.addWidget(report_label)
         self.vlayout2.addWidget(self.webView)
 
         report_button = QPushButton("Save to Computer")
         report_button.clicked.connect(self.save_report)
         self.vlayout2.addWidget(report_button)
-        self.hlayout.addLayout(self.vlayout)
-        self.hlayout.addLayout(self.vlayout2)
+        self.hlayout.addLayout(self.vlayout, 1)
+        self.hlayout.addLayout(self.vlayout2, 2)
         widget = QWidget()
         widget.setLayout(self.hlayout)
         self.setCentralWidget(widget)
@@ -74,43 +87,48 @@ class MainWindow(QMainWindow):
         self.scenario = self.scenario_cb.currentText();
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
-
-        # GET THE SEASON
-        query = f"SELECT `Season` FROM `Scenarios` WHERE `Scenario Name` = \"{self.scenario}\";"
-        cursor.execute(query)
-        self.season = cursor.fetchall()[0][0]
-
-        # VOLTAGE TABLES
-        query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
-        cursor.execute(query)
-        self.bus_data = cursor.fetchall()
-
-        for i in range(len(self.bus_data)):
-            query = f"SELECT `Bus Name`, `Voltage Base`, `criteria_nlo`, `criteria_nhi` FROM BUS WHERE `Bus Number` = \"{self.bus_data[i][0]}\";"
+        if (self.contingency == "None"):
+            query = f"SELECT `Scenario Name`, `Contingency Name` FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\";"
             cursor.execute(query)
-            bus_result_part = cursor.fetchall()
-            self.bus_data[i] += bus_result_part[0]
+            self.bus_data2 = cursor.fetchall()
+            print(self.bus_data2)
+        else:
+            # GET THE SEASON
+            query = f"SELECT `Season` FROM `Scenarios` WHERE `Scenario Name` = \"{self.scenario}\";"
+            cursor.execute(query)
+            self.season = cursor.fetchall()[0][0]
+
+            # VOLTAGE TABLES
+            query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+            cursor.execute(query)
+            self.bus_data = cursor.fetchall()
+
+            for i in range(len(self.bus_data)):
+                query = f"SELECT `Bus Name`, `Voltage Base`, `criteria_nlo`, `criteria_nhi` FROM BUS WHERE `Bus Number` = \"{self.bus_data[i][0]}\";"
+                cursor.execute(query)
+                bus_result_part = cursor.fetchall()
+                self.bus_data[i] += bus_result_part[0]
         
-        query = f"SELECT COUNT(`Bus Number`) FROM `BUS`;"
-        cursor.execute(query)
-        self.num_voltage = cursor.fetchall()[0][0]
-        # BRANCH TABLES
-        query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
-        cursor.execute(query)
-        self.branch_data = cursor.fetchall()
-
-        for i in range(len(self.branch_data)):
-            query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
+            query = f"SELECT COUNT(`Bus Number`) FROM `BUS`;"
             cursor.execute(query)
-            branch_result_part = cursor.fetchall()
-            self.branch_data[i] += branch_result_part[0]
-        query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
-        cursor.execute(query)
-        self.num_thermalbranch = cursor.fetchall()[0][0]
-        self.generate_report()
-        #self.display_report()
-        self.doc.generate_tex("tex")
-        self.display_report("tex.tex")
+            self.num_voltage = cursor.fetchall()[0][0]
+            # BRANCH TABLES
+            query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+            cursor.execute(query)
+            self.branch_data = cursor.fetchall()
+
+            for i in range(len(self.branch_data)):
+                query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
+                cursor.execute(query)
+                branch_result_part = cursor.fetchall()
+                self.branch_data[i] += branch_result_part[0]
+            query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+            cursor.execute(query)
+            self.num_thermalbranch = cursor.fetchall()[0][0]
+            self.generate_report()
+            #self.display_report()
+            self.doc.generate_tex("tex")
+            self.display_report("tex.tex")
       
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
@@ -151,7 +169,7 @@ class MainWindow(QMainWindow):
                         branch_table.add_hline()
                 else:
                     self.doc.append("No violations.")
-
+    
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
     # Write the output to the HTML file
@@ -170,6 +188,7 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle("=^.^=")
         dialog.setText("Report has been successfully generated!")
         dialog.exec();
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
