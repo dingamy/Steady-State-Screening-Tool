@@ -19,9 +19,36 @@ class MainWindow(QMainWindow):
         self.bus_data = []
         self.bus_data2 = []
         self.branch_data = []
-
         self.thermal_selected = []
         self.voltage_selected = []
+        self.column_names = {
+            "Bus Voltage": ["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"],
+            "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"]
+        }
+        self.filtered_column_names = {
+            "From Bus": "Metered End",
+            "To Bus": "Other End",
+            "Branch ID": "Branch ID",
+            "Bus": "Bus Number"
+        }
+        self.bus_table_index = {
+            "Bus Number": 0,
+            "Bus Name": 2,
+            "Bus Base (kV)": 3,
+            "Low Voltage Criteria (pu)": 4,
+            "High Voltage Critera (pu)": 5,
+            "Bus Voltage (pu)": 1
+        }
+        self.branch_table_index = {
+            "Branch Name": 0,
+            "Metered End": 3,
+            "Other End": 4,
+            "Branch ID": 5,
+            "Voltage Class (kV)": 6,
+            "Rating (Amps)": 7,
+            "Metered End Loading (Amps)": 1,
+            "Other End Loading (Amps)": 2
+        }
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
         self.resize(800,600)
@@ -35,7 +62,7 @@ class MainWindow(QMainWindow):
         vlayout.addWidget(scenario_label)
 
         self.scenario_cb = QComboBox()
-        self.add_data_to_combobox("database.db", self.scenario_cb, "`Scenario Name`", "Scenarios")
+        self.add_data_to_combobox(self.scenario_cb, "`Scenario Name`", "Scenarios")
         vlayout.addWidget(self.scenario_cb)
 
         contingency_label = QLabel('Contingency')
@@ -43,7 +70,7 @@ class MainWindow(QMainWindow):
         vlayout.addWidget(contingency_label)
 
         self.contingency_cb = QComboBox()
-        self.add_data_to_combobox("database.db", self.contingency_cb, "`Contingency Name`", "Contingency")
+        self.add_data_to_combobox(self.contingency_cb, "`Contingency Name`", "Contingency")
         vlayout.addWidget(self.contingency_cb)
 
         filter = QTreeWidget()
@@ -75,7 +102,7 @@ class MainWindow(QMainWindow):
         self.voltage_filter.setFlags(self.voltage_filter.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable)
         bus_filter = QTreeWidgetItem()
         bus_filter.setFlags(bus_filter.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        bus_filter.setText(0, "From Bus")
+        bus_filter.setText(0, "Bus")
         bus_filter.setCheckState(0, Qt.CheckState.Checked)
         self.voltage_filter.addChild(bus_filter)
         vlayout.addWidget(filter)
@@ -106,8 +133,8 @@ class MainWindow(QMainWindow):
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
         
-    def add_data_to_combobox(self, db, combobox, column, table):
-        conn = sqlite3.connect(db)
+    def add_data_to_combobox(self, combobox, column, table):
+        conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
         query = f"SELECT {column} FROM {table}"
         cursor.execute(query)
@@ -134,6 +161,10 @@ class MainWindow(QMainWindow):
             query = f"SELECT `Season` FROM `Scenarios` WHERE `Scenario Name` = \"{self.scenario}\";"
             cursor.execute(query)
             self.season = cursor.fetchall()[0][0]
+            if self.season == "Winter":
+                self.branch_table_index["Rating (Amps)" ] = 8
+            else:
+                self.branch_table_index["Rating (Amps)" ] = 7
 
             # VOLTAGE TABLES
             query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
@@ -162,6 +193,8 @@ class MainWindow(QMainWindow):
             query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
             cursor.execute(query)
             self.num_thermalbranch = cursor.fetchall()[0][0]
+            self.thermal_selected = []
+            self.voltage_selected = []
             self.get_selected_columns(self.thermal_filter, self.thermal_selected)
             self.get_selected_columns(self.voltage_filter, self.voltage_selected)
 
@@ -174,27 +207,57 @@ class MainWindow(QMainWindow):
         for i in range(0, parent.childCount()):
             if parent.child(i).checkState(0) == Qt.CheckState.Unchecked:
                 checked_items.append(parent.child(i).text(0))
-        print(checked_items)
 
     def generate_report(self):
-
         self.doc.preamble.append(NoEscape(r'\title{Steady State Contingency Analysis Report\vspace{-3ex}}'))
         self.doc.preamble.append(NoEscape(r'\date{Report generated: \today\vspace{-2ex}}'))
         self.doc.append(NoEscape(r'\maketitle'))
 
         with self.doc.create(Section(f"Contingency: {self.contingency} (Islands created: ?)", False)):
+            with self.doc.create(Subsection(f"Total number of MVar margin criiteria screened: 0", False)):
+                self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored buses: {self.num_voltage}", False)):
                 if (len(self.bus_data) != 0):
-                    self.create_bus_table()
+                    self.create_table("Bus Voltage", self.voltage_selected, self.bus_data, self.bus_table_index)
                 else:
                     self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of monitored generators: 0", False)):
+                self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of OOS margin criteria screened: 0", False)):
+                self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored branches: {self.num_thermalbranch}", False)):
                 if (len(self.branch_data) != 0):
-                    self.create_branch_table()
+                    self.create_table("Branch Thermal", self.thermal_selected, self.branch_data, self.branch_table_index)
                 else:
                     self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of monitored two winding transformers: 0", False)):
+                self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of monitored three winding transformers: 0", False)):
+                self.doc.append("No violations.")
 
-
+    def create_table(self, table_name, filtered_columns, data, index):
+        columns = self.column_names[table_name]
+        print(column_names[table_name])
+        for i in range(len(filtered_columns)):
+            columns.remove(self.filtered_column_names[filtered_columns[i]])
+        print(column_names[table_name])
+        table_str = '|'
+        for i in range(len(columns)):
+            table_str += ' X |'
+        with self.doc.create(Tabularx(table_str)) as table:
+            table.add_hline()
+            table.add_row([MultiColumn(len(columns), align='|c|', data=f"{table_name} Violations")])
+            table.add_hline()
+            table.add_row(columns)
+            
+            for i in range(len(data)):
+                table.add_hline()
+                data_row = []
+                for j in range(len(columns)):
+                    data_row.append(data[i][index[columns[j]]])
+                table.add_row(data_row)
+                table.add_hline()
+            
     def create_bus_table(self, columns):
         with self.doc.create(Tabularx('| p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |')) as bus_table:
         #with self.doc.create(Tabularx('|X|X|X|X|X|X|', width_argument=NoEscape(r'\columnwidth'))) as bus_table:
@@ -207,11 +270,9 @@ class MainWindow(QMainWindow):
                 bus_table.add_hline()
                 bus_table.add_row(self.bus_data[i][0], self.bus_data[i][2], self.bus_data[i][3], round(self.bus_data[i][4], 2), round(self.bus_data[i][5], 2), round(self.bus_data[i][1], 2))
             bus_table.add_hline()
-            
 
     def create_branch_table(self):
         columns = ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"]
-
         with self.doc.create(Tabularx('| p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |')) as branch_table:
         #with self.doc.create(Tabularx("|c|c|c|c|c|c|c|c|", NoEscape(r'\textwidth'))) as branch_table:
             
@@ -227,7 +288,6 @@ class MainWindow(QMainWindow):
                     
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
-    # Write the output to the HTML file
         with open("report.html", 'w') as f:
             f.write(output)
         file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "report.html"))
