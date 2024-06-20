@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
             "Metered End Loading (Amps)": 1,
             "Other End Loading (Amps)": 2
         }
+
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
         self.resize(800,600)
@@ -151,64 +152,74 @@ class MainWindow(QMainWindow):
         self.scenario = self.scenario_cb.currentText();
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
-        if (self.contingency == "None"):
-            query = f"SELECT `Scenario Name`, `Contingency Name` FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\";"
-            cursor.execute(query)
-            self.bus_data2 = cursor.fetchall()
-            #print(self.bus_data2)
+
+        # GET THE SEASON
+        query = f"SELECT `Season` FROM `Scenarios` WHERE `Scenario Name` = \"{self.scenario}\";"
+        cursor.execute(query)
+        self.season = cursor.fetchall()[0][0]
+        if self.season == "Winter":
+            self.branch_table_index["Rating (Amps)" ] = 8
         else:
-            # GET THE SEASON
-            query = f"SELECT `Season` FROM `Scenarios` WHERE `Scenario Name` = \"{self.scenario}\";"
-            cursor.execute(query)
-            self.season = cursor.fetchall()[0][0]
-            if self.season == "Winter":
-                self.branch_table_index["Rating (Amps)" ] = 8
-            else:
-                self.branch_table_index["Rating (Amps)" ] = 7
+            self.branch_table_index["Rating (Amps)" ] = 7
 
-            # VOLTAGE TABLES
-            query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
-            cursor.execute(query)
-            self.bus_data = cursor.fetchall()
+        # VOLTAGE TABLES
+        query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+        cursor.execute(query)
+        self.bus_data = cursor.fetchall()
 
-            for i in range(len(self.bus_data)):
-                query = f"SELECT `Bus Name`, `Voltage Base`, `criteria_nlo`, `criteria_nhi` FROM BUS WHERE `Bus Number` = \"{self.bus_data[i][0]}\";"
-                cursor.execute(query)
-                bus_result_part = cursor.fetchall()
-                self.bus_data[i] += bus_result_part[0]
+        for i in range(len(self.bus_data)):
+            query = f"SELECT `Bus Name`, `Voltage Base`, `criteria_nlo`, `criteria_nhi` FROM BUS WHERE `Bus Number` = \"{self.bus_data[i][0]}\";"
+            cursor.execute(query)
+            bus_result_part = cursor.fetchall()
+            self.bus_data[i] += bus_result_part[0]
         
-            query = f"SELECT COUNT(`Bus Number`) FROM `BUS`;"
-            cursor.execute(query)
-            self.num_voltage = cursor.fetchall()[0][0]
-            # BRANCH TABLES
-            query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
-            cursor.execute(query)
-            self.branch_data = cursor.fetchall()
+        query = f"SELECT COUNT(`Bus Number`) FROM `BUS`;"
+        cursor.execute(query)
+        self.num_voltage = cursor.fetchall()[0][0]
 
-            for i in range(len(self.branch_data)):
-                query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
-                cursor.execute(query)
-                branch_result_part = cursor.fetchall()
-                self.branch_data[i] += branch_result_part[0]
-            query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+        # BRANCH TABLES
+        query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+        cursor.execute(query)
+        self.branch_data = cursor.fetchall()
+        for i in range(len(self.branch_data)):
+            query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
             cursor.execute(query)
-            self.num_thermalbranch = cursor.fetchall()[0][0]
-            self.thermal_selected = []
-            self.voltage_selected = []
-            self.get_selected_columns(self.thermal_filter, self.thermal_selected)
-            self.get_selected_columns(self.voltage_filter, self.voltage_selected)
+            branch_result_part = cursor.fetchall()
+            self.branch_data[i] += branch_result_part[0]
+        query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+        cursor.execute(query)
+        self.num_thermalbranch = cursor.fetchall()[0][0]
 
-            self.generate_report()
-            #self.display_report()
-            self.doc.generate_tex("tex")
-            self.display_report("tex.tex")
+        self.get_table_data(query, query2, query3, self.branch_data, self.num_thermalbranch)
+
+        self.thermal_selected = []
+        self.voltage_selected = []
+        self.get_excluded_columns(self.thermal_filter, self.thermal_selected)
+        self.get_excluded_columns(self.voltage_filter, self.voltage_selected)
+        self.generate_report()
+        self.doc.generate_tex("tex")
+        self.display_report("tex.tex")
     
-    def get_selected_columns(self, parent, checked_items):
+    def get_table_data(self, query, query2, query3, data, total_num):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute(query)
+        data = cursor.fetchall()
+        for i in range(len(data)):
+            cursor.execute(query2)
+            branch_result_part = cursor.fetchall()
+            data[i] += cursor.fetchall()[0]
+        cursor.execute(query3)
+        total_num = cursor.fetchall()[0][0]
+
+    def get_excluded_columns(self, parent, checked_items):
         for i in range(0, parent.childCount()):
             if parent.child(i).checkState(0) == Qt.CheckState.Unchecked:
                 checked_items.append(parent.child(i).text(0))
 
     def generate_report(self):
+        geometry_options = {"margin": "2.54cm"}
+        self.doc = Document(geometry_options=geometry_options)
         self.doc.preamble.append(NoEscape(r'\title{Steady State Contingency Analysis Report\vspace{-3ex}}'))
         self.doc.preamble.append(NoEscape(r'\date{Report generated: \today\vspace{-2ex}}'))
         self.doc.append(NoEscape(r'\maketitle'))
@@ -236,20 +247,22 @@ class MainWindow(QMainWindow):
                 self.doc.append("No violations.")
 
     def create_table(self, table_name, filtered_columns, data, index):
-        columns = self.column_names[table_name]
-        print(column_names[table_name])
+        columns = self.column_names[table_name].copy()
         for i in range(len(filtered_columns)):
             columns.remove(self.filtered_column_names[filtered_columns[i]])
-        print(column_names[table_name])
-        table_str = '|'
+        table_str = '| '
         for i in range(len(columns)):
-            table_str += ' X |'
+            if columns[i] == "Branch Name":
+                table_str += 'p{3cm} |'
+            elif columns[i] == "Bus Name":
+                table_str += 'p{4cm} |'
+            else:
+                table_str += ' X |'
         with self.doc.create(Tabularx(table_str)) as table:
             table.add_hline()
             table.add_row([MultiColumn(len(columns), align='|c|', data=f"{table_name} Violations")])
             table.add_hline()
             table.add_row(columns)
-            
             for i in range(len(data)):
                 table.add_hline()
                 data_row = []
@@ -257,34 +270,8 @@ class MainWindow(QMainWindow):
                     data_row.append(data[i][index[columns[j]]])
                 table.add_row(data_row)
                 table.add_hline()
-            
-    def create_bus_table(self, columns):
-        with self.doc.create(Tabularx('| p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |')) as bus_table:
-        #with self.doc.create(Tabularx('|X|X|X|X|X|X|', width_argument=NoEscape(r'\columnwidth'))) as bus_table:
-            bus_table.add_hline()
-            bus_table.add_row([MultiColumn(6, align='|c|', data="Bus Voltage Violations")])
-            bus_table.add_hline()
-            bus_table.add_row(["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"])
-                    
-            for i in range(len(self.bus_data)):
-                bus_table.add_hline()
-                bus_table.add_row(self.bus_data[i][0], self.bus_data[i][2], self.bus_data[i][3], round(self.bus_data[i][4], 2), round(self.bus_data[i][5], 2), round(self.bus_data[i][1], 2))
-            bus_table.add_hline()
-
-    def create_branch_table(self):
-        columns = ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"]
-        with self.doc.create(Tabularx('| p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |')) as branch_table:
-        #with self.doc.create(Tabularx("|c|c|c|c|c|c|c|c|", NoEscape(r'\textwidth'))) as branch_table:
-            
-            branch_table.add_hline()
-            branch_table.add_row([MultiColumn(8, align='|c|', data="Branch Thermal Violations")])
-            branch_table.add_hline()
-            branch_table.add_row(columns)
-                    
-            for i in range(len(self.branch_data)):
-                branch_table.add_hline()
-                branch_table.add_row(self.branch_data[i][0], self.branch_data[i][3], self.branch_data[i][4], self.branch_data[i][5], self.branch_data[i][6], round(self.branch_data[i][8], 2) if self.season == "Winter" else round(self.branch_data[i][7], 2), round(self.branch_data[i][1], 2), round(self.branch_data[i][2], 2))
-            branch_table.add_hline()
+            # '| p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |' 
+            # p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |'
                     
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
@@ -302,6 +289,7 @@ class MainWindow(QMainWindow):
         dialog = QMessageBox(self)
         dialog.setWindowTitle("=^.^=")
         dialog.setText("Report has been successfully generated!")
+        #delete tex.tex file
         dialog.exec();
 
 
