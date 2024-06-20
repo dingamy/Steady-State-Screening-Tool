@@ -397,10 +397,10 @@ void populateBusTables(sqlite3* db, char* path) {
                 sqlite3_bind_int(stmt2, 4, atoi(stat), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt2, 5, atof(bus_pu), -1, SQLITE_STATIC);
                 sqlite3_bind_double(stmt2, 6, atof(bus_angle), -1, SQLITE_STATIC);
-                //printf("violate %s\n", violate);
+                printf("violation %s\n", violate);
                 //printf("violate %d\n", atoi(violate));
                 
-                if (strcmp(violate, "Fail\n") == 0 || atoi(violate) == 1) {
+                if (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) {
 					printf("violate: violate\n");
                  
 					sqlite3_bind_int(stmt2, 7, 1, SQLITE_STATIC);
@@ -688,8 +688,8 @@ void populateBranchTables(sqlite3* db, char* path) {
 				sqlite3_bind_double(stmt2, 13, atof(ploss), -1, SQLITE_STATIC);
 				sqlite3_bind_double(stmt2, 14, atof(qloss), -1, SQLITE_STATIC);
                 //sqlite3_bind_int(stmt2, 15, atoi(violate), -1, SQLITE_STATIC);
-
-                if (strcmp(violate, "Fail\n") == 0 || atoi(violate) == 1) {
+                
+                if (strncmp(violate, "Fail\n", 4) == 0 || atoi(violate) == 1) {
                     printf("violate1: \n");
                     sqlite3_bind_int(stmt2, 15, 1, SQLITE_STATIC);
                 }

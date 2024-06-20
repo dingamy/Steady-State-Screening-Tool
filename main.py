@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
             self.branch_table_index["Rating (Amps)" ] = 7
 
         # VOLTAGE TABLES
-        query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+        query = f"SELECT `Bus Number`, bus_pu FROM `Bus Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
         cursor.execute(query)
         self.bus_data = cursor.fetchall()
 
@@ -178,7 +178,8 @@ class MainWindow(QMainWindow):
         self.num_voltage = cursor.fetchall()[0][0]
 
         # BRANCH TABLES
-        query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+        '''
+        query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
         cursor.execute(query)
         self.branch_data = cursor.fetchall()
         for i in range(len(self.branch_data)):
@@ -190,7 +191,18 @@ class MainWindow(QMainWindow):
         cursor.execute(query)
         self.num_thermalbranch = cursor.fetchall()[0][0]
 
-        self.get_table_data(query, query2, query3, self.branch_data, self.num_thermalbranch)
+        '''
+        query = f"SELECT `Branch Name`, `amp_metered`, `amp_other` FROM `Branch Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1;"
+        query2 = "SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{DATAHERE}\";"
+        query3 = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
+        data = []
+        total = 0
+        table = [1, 2, 3]
+        self.clear_table(table)
+        self.get_table_data(query, query2, query3, data, total)
+        self.branch_data = data
+        self.num_thermalbranch = total
+        
 
         self.thermal_selected = []
         self.voltage_selected = []
@@ -199,18 +211,23 @@ class MainWindow(QMainWindow):
         self.generate_report()
         self.doc.generate_tex("tex")
         self.display_report("tex.tex")
-    
+    def clear_table(self, table):
+        table = []
     def get_table_data(self, query, query2, query3, data, total_num):
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
         cursor.execute(query)
         data = cursor.fetchall()
+        print(data)
         for i in range(len(data)):
-            cursor.execute(query2)
-            branch_result_part = cursor.fetchall()
-            data[i] += cursor.fetchall()[0]
+            query2_2 = query2.replace("{DATAHERE}", data[i][0])
+            cursor.execute(query2_2)
+            result_part = cursor.fetchall()
+            data[i] += result_part[0]
         cursor.execute(query3)
+        print(f"data: {data}")
         total_num = cursor.fetchall()[0][0]
+        conn.close()
 
     def get_excluded_columns(self, parent, checked_items):
         for i in range(0, parent.childCount()):
@@ -270,7 +287,7 @@ class MainWindow(QMainWindow):
                     data_row.append(data[i][index[columns[j]]])
                 table.add_row(data_row)
                 table.add_hline()
-            # '| p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |' 
+            # | p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |' 
             # p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |'
                     
     def display_report(self, tex_file):
