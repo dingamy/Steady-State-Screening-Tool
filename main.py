@@ -2,7 +2,7 @@ import sys, os, pypandoc, sqlite3
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from pylatex import Document, Section, Subsection, Tabularx, MultiColumn
+from pylatex import Document, Section, Subsection, Tabularx, MultiColumn, MultiRow
 from pylatex.utils import NoEscape
 
 
@@ -16,19 +16,14 @@ class MainWindow(QMainWindow):
         self.season = "";
         self.num_thermalbranch = 0
         self.num_voltage = 0
+        self.num_trans2 = 0
         self.bus_data = []
         self.branch_data = []
-        self.thermal_selected = []
-        self.voltage_selected = []
+        self.trans2_data = []
         self.column_names = {
             "Bus Voltage": ["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"],
-            "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"]
-        }
-        self.filtered_column_names = {
-            "From Bus": "Metered End",
-            "To Bus": "Other End",
-            "Branch ID": "Branch ID",
-            "Bus": "Bus Number"
+            "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"],
+            "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
         }
         self.bus_table_index = {
             "Bus Number": 0,
@@ -47,6 +42,16 @@ class MainWindow(QMainWindow):
             "Rating (Amps)": 7,
             "Metered End Loading (Amps)": 1,
             "Other End Loading (Amps)": 2
+        }
+        self.trans2_table_index = {
+            "Transformer Name": 0,
+            "Winding 1": 3,
+            "Winding 2": 4,
+            "ID": 5,
+            "Base (MVA)": 6,
+            "Voltage (kV)": [7, 8],
+            "Rating (Amps)": [9, 10],
+            "Loading (Amps)": [1, 2]
         }
 
         geometry_options = {"margin": "2.54cm"}
@@ -72,40 +77,6 @@ class MainWindow(QMainWindow):
         self.contingency_cb = QComboBox()
         self.add_data_to_combobox(self.contingency_cb, "`Contingency Name`", "Contingency")
         vlayout.addWidget(self.contingency_cb)
-
-        filter = QTreeWidget()
-        filter.setHeaderLabel("Filter")
-
-        self.thermal_filter = QTreeWidgetItem()
-        filter.addTopLevelItem(self.thermal_filter)
-        self.thermal_filter.setText(0, "Thermal")
-        self.thermal_filter.setFlags(self.thermal_filter.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable)
-        from_bus_filter = QTreeWidgetItem()
-        from_bus_filter.setFlags(from_bus_filter.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        from_bus_filter.setText(0, "From Bus")
-        from_bus_filter.setCheckState(0, Qt.CheckState.Checked)
-        to_bus_filter = QTreeWidgetItem()
-        to_bus_filter.setFlags(to_bus_filter.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        to_bus_filter.setText(0, "To Bus")
-        to_bus_filter.setCheckState(0, Qt.CheckState.Checked)
-        branch_id_filter = QTreeWidgetItem()
-        branch_id_filter.setFlags(branch_id_filter.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        branch_id_filter.setText(0, "Branch ID")
-        branch_id_filter.setCheckState(0, Qt.CheckState.Checked)
-        self.thermal_filter.addChild(from_bus_filter)
-        self.thermal_filter.addChild(to_bus_filter)
-        self.thermal_filter.addChild(branch_id_filter)
-
-        self.voltage_filter = QTreeWidgetItem()
-        filter.addTopLevelItem(self.voltage_filter)
-        self.voltage_filter.setText(0, "Voltage")
-        self.voltage_filter.setFlags(self.voltage_filter.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable)
-        bus_filter = QTreeWidgetItem()
-        bus_filter.setFlags(bus_filter.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        bus_filter.setText(0, "Bus")
-        bus_filter.setCheckState(0, Qt.CheckState.Checked)
-        self.voltage_filter.addChild(bus_filter)
-        vlayout.addWidget(filter)
 
         report = QPushButton("Generate Report")
         report.clicked.connect(self.retrieve_data)
@@ -189,19 +160,25 @@ class MainWindow(QMainWindow):
         cursor.execute(query)
         self.num_thermalbranch = cursor.fetchall()[0][0]
 
-        self.thermal_selected = []
-        self.voltage_selected = []
-        self.get_excluded_columns(self.thermal_filter, self.thermal_selected)
-        self.get_excluded_columns(self.voltage_filter, self.voltage_selected)
+        # TRANSFORMER 2 TABLES
+        query = f"SELECT `Xformer Name`, `amp_winding 1`, `amp_winding 2` FROM `Transformer2 Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
+        cursor.execute(query)
+        self.trans2_data = cursor.fetchall()
+        for i in range(len(self.trans2_data)):
+            query = f"SELECT `Winding 1`, `Winding 2`, `Xfmr ID`, `MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `RateA Winding 1`, `RateA Winding 2` FROM `Transformer2` WHERE `Xformer Name` = \"{self.trans2_data[i][0]}\";"
+            cursor.execute(query)
+            trans2_result_part = cursor.fetchall()
+
+            self.trans2_data[i] += trans2_result_part[0]
+        query = f"SELECT COUNT(`Xformer Name`) FROM `Transformer2`;"
+        cursor.execute(query)
+        self.num_trans2 = cursor.fetchall()[0][0]
+
+
         self.generate_report()
         self.doc.generate_tex("tex")
         self.display_report("tex.tex")
         conn.close()
-
-    def get_excluded_columns(self, parent, checked_items):
-        for i in range(0, parent.childCount()):
-            if parent.child(i).checkState(0) == Qt.CheckState.Unchecked:
-                checked_items.append(parent.child(i).text(0))
 
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
@@ -215,7 +192,7 @@ class MainWindow(QMainWindow):
                 self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored buses: {self.num_voltage}", False)):
                 if (len(self.bus_data) != 0):
-                    self.create_table("Bus Voltage", self.voltage_selected, self.bus_data, self.bus_table_index)
+                    self.create_table("Bus Voltage", self.bus_data, self.bus_table_index)
                 else:
                     self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored generators: 0", False)):
@@ -224,41 +201,61 @@ class MainWindow(QMainWindow):
                 self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored branches: {self.num_thermalbranch}", False)):
                 if (len(self.branch_data) != 0):
-                    self.create_table("Branch Thermal", self.thermal_selected, self.branch_data, self.branch_table_index)
+                    self.create_table("Branch Thermal", self.branch_data, self.branch_table_index)
                 else:
                     self.doc.append("No violations.")
-            with self.doc.create(Subsection(f"Total number of monitored two winding transformers: 0", False)):
-                self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of monitored two winding transformers: {self.num_trans2}", False)):
+                if (len(self.trans2_data) != 0):
+                    self.create_table("Two Winding Transformer Thermal", self.trans2_data, self.trans2_table_index)
+                else:
+                    self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored three winding transformers: 0", False)):
                 self.doc.append("No violations.")
 
-    def create_table(self, table_name, filtered_columns, data, index):
-        columns = self.column_names[table_name].copy()
-        for i in range(len(filtered_columns)):
-            columns.remove(self.filtered_column_names[filtered_columns[i]])
+    def create_table(self, table_name, data, index):
+        columns = self.column_names[table_name]
         table_str = '| '
         for i in range(len(columns)):
             if columns[i] == "Branch Name":
                 table_str += 'p{3cm} |'
             elif columns[i] == "Bus Name":
                 table_str += 'p{4cm} |'
+            elif columns[i] == "Transformer Name":
+                table_str += 'p{1.7cm} |'
+            elif columns[i] == "ID":
+                table_str += 'p{0.3cm} |'
             else:
                 table_str += ' X |'
         with self.doc.create(Tabularx(table_str)) as table:
             table.add_hline()
             table.add_row([MultiColumn(len(columns), align='|c|', data=f"{table_name} Violations")])
             table.add_hline()
-            table.add_row(columns)
+            if table_name == "Two Winding Transformer Thermal":
+                table.add_row([
+                    "Transformer Name", MultiColumn(2, align='|c|', data="Bus Number"), "ID", MultiColumn(4, align='|c|', data="Winding 1"), MultiColumn(4, align='|c|', data="Winding 2")
+                ])
+                table.add_hline(2, 3)
+                table.add_hline(5, 12)
+                table.add_row(["", "Winding 1", "Winding 2", "", columns[5], columns[6], columns[7], columns[8], columns[5], columns[6], columns[7], columns[8]])
+            else:
+                table.add_row(columns)
+            
             for i in range(len(data)):
                 table.add_hline()
                 data_row = []
                 for j in range(len(columns)):
-                    data_row.append(data[i][index[columns[j]]])
+                    temp = index[columns[j]]
+                    if isinstance(temp, list):
+                        if i > 7 and table_name == "Two Winding Transformer Thermal":
+                            temp = index[columns[j]][1]
+                        else:
+                            temp = index[columns[j]][0]
+                    data_row.append(data[i][temp])
                 table.add_row(data_row)
                 table.add_hline()
             # | p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |' 
             # p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |'
-                    
+            
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
         with open("report.html", 'w') as f:
