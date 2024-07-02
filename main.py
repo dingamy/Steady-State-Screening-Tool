@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.column_names = {
             "Bus Voltage": ["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"],
             "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"],
-            "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
+            "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
         }
         self.bus_table_index = {
             "Bus Number": 0,
@@ -155,6 +155,10 @@ class MainWindow(QMainWindow):
             query = f"SELECT `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateA win` FROM `Branch` WHERE `Branch Name` = \"{self.branch_data[i][0]}\";"
             cursor.execute(query)
             branch_result_part = cursor.fetchall()
+            branch_result_part[0] = (branch_result_part[0][0], branch_result_part[0][1], branch_result_part[0][2], round(branch_result_part[0][3], 2), round(branch_result_part[0][4], 2), round(branch_result_part[0][5], 2))
+            print(self.branch_data[i])
+            self.branch_data[i] = (self.branch_data[i][0], round(self.branch_data[i][1], 2), round(self.branch_data[i][2], 2))
+            print(self.branch_data[i])
             self.branch_data[i] += branch_result_part[0]
         query = f"SELECT COUNT(`Branch Name`) FROM `Branch`;"
         cursor.execute(query)
@@ -168,8 +172,9 @@ class MainWindow(QMainWindow):
             query = f"SELECT `Winding 1`, `Winding 2`, `Xfmr ID`, `MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `RateA Winding 1`, `RateA Winding 2` FROM `Transformer2` WHERE `Xformer Name` = \"{self.trans2_data[i][0]}\";"
             cursor.execute(query)
             trans2_result_part = cursor.fetchall()
-
-            self.trans2_data[i] += trans2_result_part[0]
+            rounded_trans2_result_part = (trans2_result_part[0][0], trans2_result_part[0][1], trans2_result_part[0][2], trans2_result_part[0][3], round(trans2_result_part[0][4], 2), round(trans2_result_part[0][5], 2), round(trans2_result_part[0][6], 2), round(trans2_result_part[0][7], 2))
+            self.trans2_data[i] = (self.trans2_data[i][0], round(self.trans2_data[i][1], 2), round(self.trans2_data[i][2], 2))
+            self.trans2_data[i] += rounded_trans2_result_part
         query = f"SELECT COUNT(`Xformer Name`) FROM `Transformer2`;"
         cursor.execute(query)
         self.num_trans2 = cursor.fetchall()[0][0]
@@ -232,11 +237,11 @@ class MainWindow(QMainWindow):
             table.add_hline()
             if table_name == "Two Winding Transformer Thermal":
                 table.add_row([
-                    "Transformer Name", MultiColumn(2, align='|c|', data="Bus Number"), "ID", MultiColumn(4, align='|c|', data="Winding 1"), MultiColumn(4, align='|c|', data="Winding 2")
+                    "Transformer Name", MultiColumn(2, align='|c|', data="Bus Number"), "ID", "Base (MVA)", MultiColumn(3, align='|c|', data="Winding 1"), MultiColumn(3, align='|c|', data="Winding 2")
                 ])
                 table.add_hline(2, 3)
-                table.add_hline(5, 12)
-                table.add_row(["", "Winding 1", "Winding 2", "", columns[5], columns[6], columns[7], columns[8], columns[5], columns[6], columns[7], columns[8]])
+                table.add_hline(6, 11)
+                table.add_row(["", "Winding 1", "Winding 2", "", "", columns[5], columns[6], columns[7], columns[5], columns[6], columns[7]])
             else:
                 table.add_row(columns)
             
@@ -246,7 +251,7 @@ class MainWindow(QMainWindow):
                 for j in range(len(columns)):
                     temp = index[columns[j]]
                     if isinstance(temp, list):
-                        if i > 7 and table_name == "Two Winding Transformer Thermal":
+                        if j > 7 and table_name == "Two Winding Transformer Thermal":
                             temp = index[columns[j]][1]
                         else:
                             temp = index[columns[j]][0]
