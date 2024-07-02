@@ -285,6 +285,9 @@ void processT2File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* li
 		}
     }
 }
+void checkForUpdates(sqlite3* db, sqlite3_stmt* statements[], char* scenario, char* contingency, char* date) {
+    // check for updates
+}
 void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statements[], int type) {
     printf("processing file: %s\n", filename);
     char* contingency = getContingency(filename);
@@ -314,6 +317,10 @@ void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statement
 		printf("t2 table\n");
 		processT2File(db, file, statements, line, scenario, contingency, date);
 	}
+    else if (type == 7) { // checks for updated files
+		printf("check for updated files\n");
+        checkForUpdates(db, file, statements, scenario, contingency, data);
+    }
     fclose(file);
 }
 void traverseDirectory(sqlite3* db, char*path, sqlite3_stmt* statements[], int type) {
@@ -340,13 +347,7 @@ void traverseDirectory(sqlite3* db, char*path, sqlite3_stmt* statements[], int t
                 closedir(d);
                 exit(-1);
             }
-            if (type != 7) {
-                processFile(db, path, filename, statements, type);
-            }
-            else {
-                printf("filename: %s\n", filename);
-                char* contingency = getContingency(filename);
-            }
+            processFile(db, path, filename, statements, type);
         }
     }
     closedir(d);
@@ -592,7 +593,6 @@ void populateTransformer2Tables(sqlite3* db, char* path)   {
         sqlite3_finalize(statements[i]);
     }
 }
-
 void repopulateTables(sqlite3* db) {
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
@@ -626,8 +626,11 @@ void repopulateTables(sqlite3* db) {
     populateTransformer2Tables(db, "./thermal2winding");
 }
 void updateTables(sqlite3* db) {
-    char* statements[1];
-    traverseDirectory(db, ".", statements, 7);
+    sqlite3_stmt* stmt = NULL;
+	char* sql_str = "SELECT `Date Last Modified` FROM `Bus Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
+	prepareStatement(db, sql_str, &stmt);
+    sqlite3_stmt* statements[] = { stmt };
+    traverseDirectory(db, "./Voltage", statements, 7);
 }
 int main(int argc, char* argv[]) {
     char* file = "database2.db";
