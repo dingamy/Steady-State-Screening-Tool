@@ -37,6 +37,13 @@ char* getSeason(char* path) {
 	season = strtok(NULL, "-");
 	return season;
 }
+char* getDate(char* path) {
+    struct stat filestat;
+    stat(path, &filestat);
+    char* dt[100];
+    strftime(dt, sizeof(dt), "%Y-%m-%d %H:%M:%S", localtime(&filestat.st_mtime));
+    return dt;
+}
 void prepareStatement(sqlite3* db, const char* sql_str, sqlite3_stmt** stmt) {
 	int rc = sqlite3_prepare_v2(db, sql_str, -1, stmt, NULL);
 	if (rc != SQLITE_OK) {
@@ -49,11 +56,10 @@ void stepStatement(sqlite3* db, sqlite3_stmt** stmt) {
 		handle_error(db, "step error");
 	}
 }
-void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency) {
+void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* date) {
     int rc = 0;
     char line[1024];
     while (fgets(line, 1024, file) != NULL) {
-        printf("line: %s\n", line);
         char* bus_number = strtok(line, ",");
         char* bus_name = strtok(NULL, ",");
         char* area = strtok(NULL, ",");
@@ -90,6 +96,7 @@ void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* s
         sqlite3_bind_double(statements[1], 6, atof(bus_angle), -1, SQLITE_STATIC);
         sqlite3_bind_int(statements[1], 7, (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) ? 1 : 0);
         sqlite3_bind_int(statements[1], 8, exception ? atoi(exception) : 0);
+        sqlite3_bind_text(statements[1], 9, date, -1, SQLITE_STATIC);
         stepStatement(db, statements[1]);
 
         for (int x = 0; x < 2; x++) {
@@ -98,10 +105,9 @@ void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* s
         }
     }
 }
-void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* season) {
+void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* season, char* date) {
     int rc = 0;
     char line[1024];
-	printf("Season: %s\n", season);
     while (fgets(line, 1024, file) != NULL) {
         char* branch_name = strtok(line, ",");
         char* metered_bus_number = strtok(NULL, ",");
@@ -182,6 +188,7 @@ void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char
         sqlite3_bind_double(statements[1], 14, atof(qloss), -1, SQLITE_STATIC);
         sqlite3_bind_int(statements[1], 15, (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) ? 1 : 0);
         sqlite3_bind_int(statements[1], 16, exception ? atoi(exception) : 0);
+        sqlite3_bind_text(statements[1], 17, date, -1, SQLITE_STATIC);
 
         stepStatement(db, statements[1]);
 
@@ -191,7 +198,7 @@ void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char
         }
     }
 }
-void processT2File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* line, char* scenario, char* contingency) {
+void processT2File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* line, char* scenario, char* contingency, char* date) {
     int rc = 0;
     while (fgets(line, 1024, file) != NULL) {
         size_t line_size = snprintf(NULL, 0, line) + 2;
@@ -269,6 +276,7 @@ void processT2File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* li
         sqlite3_bind_double(statements[1], 12, atof(qloss), -1, SQLITE_STATIC);
         sqlite3_bind_int(statements[1], 13, strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1 ? 1 : 0);
         sqlite3_bind_int(statements[1], 14, exception ? atoi(exception) : 0);
+        sqlite3_bind_text(statements[1], 15, date, -1, SQLITE_STATIC);
         stepStatement(db, statements[1]);
  
 		for (int y = 0; y < 2; y++) {
@@ -284,6 +292,7 @@ void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statement
 	char* season = getSeason(filename);
     char filePath[1024];
     snprintf(filePath, sizeof(filePath), "%s\\%s", path, filename);
+	char* date = getDate(filePath);
 
     FILE* file = fopen(filePath, "r");
     if (file == NULL) {
@@ -295,15 +304,15 @@ void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statement
     fgets(line, 1024, file); // gets rid of column name
     if (type == 0) { // 0 is for bus table
         printf("bus table\n");
-		processBusFile(db, file, statements, scenario, contingency);
+		processBusFile(db, file, statements, scenario, contingency, date);
     }
 	else if (type == 1) { // branch table
         printf("branch table\n");
-        processBranchFile(db, file, statements, scenario, contingency, season);
+        processBranchFile(db, file, statements, scenario, contingency, season, date);
     }
 	else if (type == 2) { // transformer2 table
 		printf("t2 table\n");
-		processT2File(db, file, statements, line, scenario, contingency);
+		processT2File(db, file, statements, line, scenario, contingency, date);
 	}
     fclose(file);
 }
@@ -342,7 +351,6 @@ void traverseDirectory(sqlite3* db, char*path, sqlite3_stmt* statements[], int t
     }
     closedir(d);
 }
-
 void populateScenCont(sqlite3* db, const char* path) {
     sqlite3_stmt* stmt = NULL;
     int rc = 0;
@@ -536,7 +544,7 @@ void populateBusTables(sqlite3* db, char* path) {
 
     char* sql_str = "INSERT OR IGNORE INTO BUS (`Bus Number`, `Bus Name`, `Area`, `Zone`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str, &stmt);
-    char* sql_str2 = "INSERT OR IGNORE INTO `Bus Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `stat`, `bus_pu`, `bus_angle`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+    char* sql_str2 = "INSERT OR IGNORE INTO `Bus Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `stat`, `bus_pu`, `bus_angle`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str2, &stmt2);
 
     sqlite3_stmt* statements[] = { stmt, stmt2 };
@@ -555,7 +563,7 @@ void populateBranchTables(sqlite3* db, char* path) {
 
     char* sql_str = "INSERT OR IGNORE INTO Branch (`Branch Name`, `Metered Bus Number`, `Other Bus Number`, `Branch ID`, `Voltage Base`, `RateA sum`, `RateB sum`, `RateC sum`, `RateA win`, `RateB win`, `RateC win`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str, &stmt);
-    char* sql_str2 = "INSERT OR IGNORE INTO `Branch Simulation Results` (`Scenario Name`, `Contingency Name`, `Branch Name`, `stat`, `p_metered`, `p_other`, `q_metered`, `q_other`, `amp_angle_metered`, `amp_angle_other`, `amp_metered`, `amp_other`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    char* sql_str2 = "INSERT OR IGNORE INTO `Branch Simulation Results` (`Scenario Name`, `Contingency Name`, `Branch Name`, `stat`, `p_metered`, `p_other`, `q_metered`, `q_other`, `amp_angle_metered`, `amp_angle_other`, `amp_metered`, `amp_other`, `ploss`, `qloss`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str2, &stmt2);
     char* sql_str3 = "SELECT exists(SELECT * FROM `Branch` WHERE `Branch Name` = ?);";
     prepareStatement(db, sql_str3, &stmt3);
@@ -571,12 +579,12 @@ void populateBranchTables(sqlite3* db, char* path) {
 		sqlite3_finalize(statements[i]);
 	}
 }
-void populateTransformer2Tables(sqlite3* db, char* path) {
+void populateTransformer2Tables(sqlite3* db, char* path)   {
     sqlite3_stmt* stmt = NULL;
     sqlite3_stmt* stmt2 = NULL;
     char* sql_str = "INSERT OR IGNORE INTO Transformer2 (`Xformer Name`, `Winding 1`, `Winding 2`, `Xfmr ID`, `MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `RateA Winding 1`, `RateB Winding 1`, `RateC Winding 1`, `RateA Winding 2`, `RateB Winding 2`, `RateC Winding 2`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str, &stmt);
-    char* sql_str2 = "INSERT OR IGNORE INTO `Transformer2 Simulation Results` (`Scenario Name`, `Contingency Name`, `Xformer Name`, `stat`, `p_winding 1`, `p_winding 2`, `q_winding 1`, `q_winding 2`, `amp_winding 1`, `amp_winding 2`, `ploss`, `qloss`, `violate`, `exception`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    char* sql_str2 = "INSERT OR IGNORE INTO `Transformer2 Simulation Results` (`Scenario Name`, `Contingency Name`, `Xformer Name`, `stat`, `p_winding 1`, `p_winding 2`, `q_winding 1`, `q_winding 2`, `amp_winding 1`, `amp_winding 2`, `ploss`, `qloss`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     prepareStatement(db, sql_str2, &stmt2);
     sqlite3_stmt* statements[] = { stmt, stmt2 };
     traverseDirectory(db, path, statements, 2);
@@ -584,6 +592,7 @@ void populateTransformer2Tables(sqlite3* db, char* path) {
         sqlite3_finalize(statements[i]);
     }
 }
+
 void repopulateTables(sqlite3* db) {
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
@@ -593,15 +602,15 @@ void repopulateTables(sqlite3* db) {
         "DROP TABLE IF EXISTS BUS;",
         "CREATE TABLE BUS (`Bus Number` INT PRIMARY KEY, `Bus Name` TEXT, Area INT, Zone INT, Owner INT, `Voltage Base` FLOAT, criteria_nlo FLOAT, criteria_nhi FLOAT, criteria_elo FLOAT, criteria_ehi FLOAT);",
         "DROP TABLE IF EXISTS `Bus Simulation Results`;",
-        "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
+        "CREATE TABLE `Bus Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, stat INT, bus_pu FLOAT NOT NULL, bus_angle FLOAT NOT NULL, violate INT, exception INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES BUS (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE);",
         "DROP TABLE IF EXISTS Branch;",
         "CREATE TABLE Branch (`Branch Name` TEXT PRIMARY KEY, `Metered Bus Number` INT, `Other Bus Number` INT, `Branch ID` TEXT, `Voltage Base` FLOAT, `RateA sum` FLOAT, `RateB sum` FLOAT, `RateC sum` FLOAT, `RateA win` FLOAT, `RateB win` FLOAT, `RateC win` FLOAT);",
         "DROP TABLE IF EXISTS `Branch Simulation Results`;",
-        "CREATE TABLE `Branch Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Branch Name` TEXT, `stat` INT, `p_metered` FLOAT, `p_other` FLOAT, `q_metered` FLOAT, `q_other` FLOAT, `amp_angle_metered` FLOAT, `amp_angle_other` FLOAT, `amp_metered` FLOAT, `amp_other` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Branch Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Branch Name`) REFERENCES Branch (`Branch Name`) ON DELETE CASCADE ON UPDATE CASCADE);",
+        "CREATE TABLE `Branch Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Branch Name` TEXT, `stat` INT, `p_metered` FLOAT, `p_other` FLOAT, `q_metered` FLOAT, `q_other` FLOAT, `amp_angle_metered` FLOAT, `amp_angle_other` FLOAT, `amp_metered` FLOAT, `amp_other` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Branch Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Branch Name`) REFERENCES Branch (`Branch Name`) ON DELETE CASCADE ON UPDATE CASCADE);",
         "DROP TABLE IF EXISTS `Transformer2`;",
         "CREATE TABLE Transformer2 (`Xformer Name` TEXT PRIMARY KEY, `Winding 1` INT, `Winding 2` INT, `Xfmr ID` TEXT, `MVA Base` FLOAT, `Winding 1 nominal KV` FLOAT, `Winding 2 nominal KV` FLOAT, `RateA Winding 1` FLOAT, `RateB Winding 1` FLOAT, `RateC Winding 1` FLOAT, `RateA Winding 2` FLOAT, `RateB Winding 2` FLOAT, `RateC Winding 2` FLOAT, `Tap Limit min` FLOAT, `Tap Limit max` FLOAT, `Tap Steps` INT);",
         "DROP TABLE IF EXISTS `Transformer2 Simulation Results`;",
-        "CREATE TABLE `Transformer2 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `stat` INT, `p_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 1` FLOAT, `q_winding 2` FLOAT, `amp_winding 1` FLOAT, `amp_winding 2` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer2 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
+        "CREATE TABLE `Transformer2 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `stat` INT, `p_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 1` FLOAT, `q_winding 2` FLOAT, `amp_winding 1` FLOAT, `amp_winding 2` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer2 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
     };
     sqlite3_stmt* stmt = NULL;
     for (int i = 0; i < 16; i++) {
@@ -630,7 +639,7 @@ int main(int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
         handle_error(db, "Cannot open database");     
     }
-    updateTables(db);
-	//repopulateTables(db);
+    //updateTables(db);
+	repopulateTables(db);
 	return 0;
 }
