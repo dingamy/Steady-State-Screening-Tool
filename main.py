@@ -1,5 +1,5 @@
 import sys, os, pypandoc, sqlite3
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem, QInputDialog
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from pylatex import Document, Section, Subsection, Tabularx, MultiColumn, MultiRow
@@ -270,8 +270,10 @@ class MainWindow(QMainWindow):
         self.webView.setUrl(local_url)
 
     def save_report(self):
-        self.doc.generate_pdf('report', clean_tex=False)
-        self.done_alert()
+        text, ok = QInputDialog.getText(self, 'Text Input Dialog', 'Enter your name:')
+        if ok:
+            self.doc.generate_pdf('report', clean_tex=False)
+            self.done_alert()
        
     def done_alert(self):
         dialog = QMessageBox(self)
