@@ -1,4 +1,5 @@
-#include "sqlite3.h"
+#include "sqlite-amalgamation-3450300/sqlite3.h"
+// HELLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -428,11 +429,18 @@ void traverseDirectory(sqlite3* db, char*path, sqlite3_stmt* statements[], int t
     }
     struct dirent* dir;
     while ((dir = readdir(d)) != NULL) {
-        if (dir->d_type == DT_DIR) { // recursively traverse through directories
+        char filePath[1024];
+        snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
+        struct stat statbuf;
+        if (stat(filePath, &statbuf) == -1) {
+            printf("Couldn't get file stats\n");
+            sqlite3_close(db);
+            exit(-1);
+        }
+
+        if (S_ISDIR(statbuf.st_mode)) { // recursively traverse through directories
             if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
                 continue;
-            char filePath[1024];
-            snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
             traverseDirectory(db, filePath, statements, type);
         }
         if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
@@ -460,11 +468,18 @@ void populateScenCont(sqlite3* db, const char* path) {
     }
 
     while ((dir = readdir(d)) != NULL) {
-        if (dir->d_type == DT_DIR) { // recursively traverse through directories
-            char filePath[1024];
+        char filePath[1024];
+        snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
+        struct stat statbuf;
+		if (stat(filePath, &statbuf) == -1) {
+			printf("Couldn't get file stats\n");
+			sqlite3_close(db);
+			exit(-1);
+		}
+
+        if (S_ISDIR(statbuf.st_mode)) { // recursively traverse through directories
             if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
                 continue;
-            snprintf(filePath, sizeof(filePath), "%s/%s", path, dir->d_name);
             populateScenCont(db, filePath);
         }
         if (strstr(dir->d_name, ".csv") != NULL) { // if it's a csv file then we process
