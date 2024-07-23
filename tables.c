@@ -1,4 +1,4 @@
-#include "sqlite-amalgamation-3450300/sqlite3.h"
+#include "sqlite3.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,12 +41,17 @@ char* getSeason(char* path) {
 	season = strtok(NULL, "-");
 	return season;
 }
-char* getDate(char* path) {
+void getDate(char* dt, size_t dt_size, char* path) {
     struct stat filestat;
-    stat(path, &filestat);
-    char* dt[100];
-    strftime(dt, sizeof(dt), "%Y-%m-%d %H:%M", localtime(&filestat.st_mtime));
-    return dt;
+    if (stat(path, &filestat) != 0) {
+		printf("Couldn't get file stats\n");
+		exit(-1);
+    }
+
+    if (strftime(dt, dt_size, "%Y-%m-%d %H:%M", localtime(&filestat.st_mtime)) == 0) {
+		printf("strftime failed\n");
+		exit(-1);
+    }
 }
 void prepareStatement(sqlite3* db, const char* sql_str, sqlite3_stmt** stmt) {
 	int rc = sqlite3_prepare_v2(db, sql_str, -1, stmt, NULL);
@@ -54,14 +59,13 @@ void prepareStatement(sqlite3* db, const char* sql_str, sqlite3_stmt** stmt) {
 		handle_error(db, "prepare error");
 	}
 }
-int stepStatement(sqlite3* db, sqlite3_stmt** stmt) {
+int stepStatement(sqlite3* db, sqlite3_stmt* stmt) {
 	int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		handle_error(db, "step error");
 	}
     return rc;
 }
-
 void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* date) {
     int rc = 0;
     char line[1024];
@@ -83,24 +87,24 @@ void processBusFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* s
         char* exception = strtok(NULL, ",");
 
      
-        sqlite3_bind_int64(statements[0], 1, atoi(bus_number), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(statements[0], 1, atoi(bus_number));
         sqlite3_bind_text(statements[0], 2, bus_name, -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[0], 3, atoi(area), -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[0], 4, atoi(zone), -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[0], 5, atoi(owner), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 6, atof(voltage_base), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 7, atof(criteria_nlo), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 8, atof(criteria_nhi), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 9, atof(criteria_elo), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 10, atof(criteria_ehi), -1, SQLITE_STATIC);
+        sqlite3_bind_int(statements[0], 3, atoi(area));
+        sqlite3_bind_int(statements[0], 4, atoi(zone));
+        sqlite3_bind_int(statements[0], 5, atoi(owner));
+        sqlite3_bind_double(statements[0], 6, atof(voltage_base));
+        sqlite3_bind_double(statements[0], 7, atof(criteria_nlo));
+        sqlite3_bind_double(statements[0], 8, atof(criteria_nhi));
+        sqlite3_bind_double(statements[0], 9, atof(criteria_elo));
+        sqlite3_bind_double(statements[0], 10, atof(criteria_ehi));
         stepStatement(db, statements[0]);
         
         sqlite3_bind_text(statements[1], 1, scenario, -1, SQLITE_STATIC);
         sqlite3_bind_text(statements[1], 2, contingency, -1, SQLITE_STATIC);
-        sqlite3_bind_int64(statements[1], 3, atoi(bus_number), -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[1], 4, atoi(stat), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 5, atof(bus_pu), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 6, atof(bus_angle), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(statements[1], 3, atoi(bus_number));
+        sqlite3_bind_int(statements[1], 4, atoi(stat));
+        sqlite3_bind_double(statements[1], 5, atof(bus_pu));
+        sqlite3_bind_double(statements[1], 6, atof(bus_angle));
         sqlite3_bind_int(statements[1], 7, (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) ? 1 : 0);
         sqlite3_bind_int(statements[1], 8, exception ? atoi(exception) : 0);
         sqlite3_bind_text(statements[1], 9, date, -1, SQLITE_STATIC);
@@ -145,36 +149,36 @@ void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char
         int exists = sqlite3_column_int(statements[2], 0);
         if (exists == 1) { // branch already exists 
             if (season[0] == 's' || season[0] == 'S') { // summer
-                sqlite3_bind_double(statements[3], 1, atof(rateA), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[3], 2, atof(rateB), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[3], 3, atof(rateC), -1, SQLITE_STATIC);
+                sqlite3_bind_double(statements[3], 1, atof(rateA));
+                sqlite3_bind_double(statements[3], 2, atof(rateB));
+                sqlite3_bind_double(statements[3], 3, atof(rateC));
                 sqlite3_bind_text(statements[3], 4, branch_name, -1, SQLITE_STATIC);
                 stepStatement(db, statements[3]);
             }
             else { // winter
-                sqlite3_bind_double(statements[4], 1, atof(rateA), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[4], 2, atof(rateB), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[4], 3, atof(rateC), -1, SQLITE_STATIC);
+                sqlite3_bind_double(statements[4], 1, atof(rateA));
+                sqlite3_bind_double(statements[4], 2, atof(rateB));
+                sqlite3_bind_double(statements[4], 3, atof(rateC));
                 sqlite3_bind_text(statements[4], 4, branch_name, -1, SQLITE_STATIC);
                 stepStatement(db, statements[4]);
             }
         }
         else { // branch doesn't exist
             sqlite3_bind_text(statements[0], 1, branch_name, -1, SQLITE_STATIC);
-            sqlite3_bind_int64(statements[0], 2, atoi(metered_bus_number), -1, SQLITE_STATIC);
-            sqlite3_bind_int64(statements[0], 3, atoi(other_bus_number), -1, SQLITE_STATIC);
+            sqlite3_bind_int64(statements[0], 2, atoi(metered_bus_number));
+            sqlite3_bind_int64(statements[0], 3, atoi(other_bus_number));
             sqlite3_bind_text(statements[0], 4, branch_id, -1, SQLITE_STATIC);
-            sqlite3_bind_double(statements[0], 5, atof(voltage_base), -1, SQLITE_STATIC);
+            sqlite3_bind_double(statements[0], 5, atof(voltage_base));
 
             if (season[0] == 's' || season[0] == 'S') {
-                sqlite3_bind_double(statements[0], 6, atof(rateA), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[0], 7, atof(rateB), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[0], 8, atof(rateC), -1, SQLITE_STATIC);
+                sqlite3_bind_double(statements[0], 6, atof(rateA));
+                sqlite3_bind_double(statements[0], 7, atof(rateB));
+                sqlite3_bind_double(statements[0], 8, atof(rateC));
             }
             else {
-                sqlite3_bind_double(statements[0], 9, atof(rateA), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[0], 10, atof(rateB), -1, SQLITE_STATIC);
-                sqlite3_bind_double(statements[0], 11, atof(rateC), -1, SQLITE_STATIC);
+                sqlite3_bind_double(statements[0], 9, atof(rateA));
+                sqlite3_bind_double(statements[0], 10, atof(rateB));
+                sqlite3_bind_double(statements[0], 11, atof(rateC));
             }
             stepStatement(db, statements[0]);
         }
@@ -182,17 +186,17 @@ void processBranchFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char
         sqlite3_bind_text(statements[1], 1, scenario, -1, SQLITE_STATIC);
         sqlite3_bind_text(statements[1], 2, contingency, -1, SQLITE_STATIC);
         sqlite3_bind_text(statements[1], 3, branch_name, -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[1], 4, atoi(stat), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 5, atof(p_metered), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 6, atof(p_other), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 7, atof(q_metered), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 8, atof(q_other), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 9, atof(amp_angle_metered), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 10, atof(amp_angle_other), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 11, atof(amp_metered), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 12, atof(amp_other), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 13, atof(ploss), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 14, atof(qloss), -1, SQLITE_STATIC);
+        sqlite3_bind_int(statements[1], 4, atoi(stat));
+        sqlite3_bind_double(statements[1], 5, atof(p_metered));
+        sqlite3_bind_double(statements[1], 6, atof(p_other));
+        sqlite3_bind_double(statements[1], 7, atof(q_metered));
+        sqlite3_bind_double(statements[1], 8, atof(q_other));
+        sqlite3_bind_double(statements[1], 9, atof(amp_angle_metered));
+        sqlite3_bind_double(statements[1], 10, atof(amp_angle_other));
+        sqlite3_bind_double(statements[1], 11, atof(amp_metered));
+        sqlite3_bind_double(statements[1], 12, atof(amp_other));
+        sqlite3_bind_double(statements[1], 13, atof(ploss));
+        sqlite3_bind_double(statements[1], 14, atof(qloss));
         sqlite3_bind_int(statements[1], 15, (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) ? 1 : 0);
         sqlite3_bind_int(statements[1], 16, exception ? atoi(exception) : 0);
         sqlite3_bind_text(statements[1], 17, date, -1, SQLITE_STATIC);
@@ -255,33 +259,33 @@ void processT2File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* sc
         }
 
         sqlite3_bind_text(statements[0], 1, xformer_name, -1, SQLITE_STATIC);
-        sqlite3_bind_int64(statements[0], 2, atoi(winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_int64(statements[0], 3, atoi(winding2), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(statements[0], 2, atoi(winding1));
+        sqlite3_bind_int64(statements[0], 3, atoi(winding2));
         sqlite3_bind_text(statements[0], 4, xfmr_id, -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 5, atof(mva_base), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 6, atof(winding1_nominal_kv), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 7, atof(winding2_nominal_kv), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 8, atof(rateA_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 9, atof(rateB_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 10, atof(rateC_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 11, atof(rateA_winding2), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 12, atof(rateB_winding2), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[0], 13, atof(rateC_winding2), -1, SQLITE_STATIC);
+        sqlite3_bind_double(statements[0], 5, atof(mva_base));
+        sqlite3_bind_double(statements[0], 6, atof(winding1_nominal_kv));
+        sqlite3_bind_double(statements[0], 7, atof(winding2_nominal_kv));
+        sqlite3_bind_double(statements[0], 8, atof(rateA_winding1));
+        sqlite3_bind_double(statements[0], 9, atof(rateB_winding1));
+        sqlite3_bind_double(statements[0], 10, atof(rateC_winding1));
+        sqlite3_bind_double(statements[0], 11, atof(rateA_winding2));
+        sqlite3_bind_double(statements[0], 12, atof(rateB_winding2));
+        sqlite3_bind_double(statements[0], 13, atof(rateC_winding2));
 		stepStatement(db, statements[0]);
         
 
         sqlite3_bind_text(statements[1], 1, scenario, -1, SQLITE_STATIC);
         sqlite3_bind_text(statements[1], 2, contingency, -1, SQLITE_STATIC);
         sqlite3_bind_text(statements[1], 3, xformer_name, -1, SQLITE_STATIC);
-        sqlite3_bind_int(statements[1], 4, atoi(stat), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 5, atof(p_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 6, atof(p_winding2), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 7, atof(q_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 8, atof(q_winding2), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 9, atof(amp_winding1), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 10, atof(amp_winding2), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 11, atof(ploss), -1, SQLITE_STATIC);
-        sqlite3_bind_double(statements[1], 12, atof(qloss), -1, SQLITE_STATIC);
+        sqlite3_bind_int(statements[1], 4, atoi(stat));
+        sqlite3_bind_double(statements[1], 5, atof(p_winding1));
+        sqlite3_bind_double(statements[1], 6, atof(p_winding2));
+        sqlite3_bind_double(statements[1], 7, atof(q_winding1));
+        sqlite3_bind_double(statements[1], 8, atof(q_winding2));
+        sqlite3_bind_double(statements[1], 9, atof(amp_winding1));
+        sqlite3_bind_double(statements[1], 10, atof(amp_winding2));
+        sqlite3_bind_double(statements[1], 11, atof(ploss));
+        sqlite3_bind_double(statements[1], 12, atof(qloss));
         sqlite3_bind_int(statements[1], 13, strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1 ? 1 : 0);
         sqlite3_bind_int(statements[1], 14, exception ? atoi(exception) : 0);
         sqlite3_bind_text(statements[1], 15, date, -1, SQLITE_STATIC);
@@ -378,7 +382,6 @@ void checkForUpdates(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* 
 	sqlite3_reset(statements[0]);
 	sqlite3_clear_bindings(statements[0]);
 }
-
 void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statements[], int type) {
     printf("processing file: %s\n", filename);
     char* contingency = getContingency(filename);
@@ -386,8 +389,8 @@ void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statement
 	char* season = getSeason(filename);
     char filePath[1024];
     snprintf(filePath, sizeof(filePath), "%s\\%s", path, filename);
-	char* date = getDate(filePath);
-
+    char date[100];
+	getDate(date, sizeof(date), filePath);
     FILE* file = fopen(filePath, "r");
     if (file == NULL) {
         printf("Couldn't open file\n");
@@ -693,8 +696,8 @@ void repopulateTables(sqlite3* db) {
     
     populateScenCont(db, ".");
     populateBusTables(db, VOLTAGE_FOLDER);
-    populateBranchTables(db, THERMALBRANCH_FOLDER);
-    populateTransformer2Tables(db, THERMAL2_FOLDER);
+    //populateBranchTables(db, THERMALBRANCH_FOLDER);
+    //populateTransformer2Tables(db, THERMAL2_FOLDER);
 }
 void updateTables(sqlite3* db) {
     sqlite3_stmt* stmt = NULL;
@@ -732,8 +735,8 @@ int main(int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
         handle_error(db, "Cannot open database");     
     }
-    //repopulateTables(db);
-    updateTables(db);
+    repopulateTables(db);
+    //updateTables(db);
 	sqlite3_close(db);
 	return 0;
 }
