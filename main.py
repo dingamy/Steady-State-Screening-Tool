@@ -1,11 +1,13 @@
-import sys, os, pypandoc, sqlite3
+import sys, os, pypandoc, sqlite3, ctypes
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem, QInputDialog
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from pylatex import Document, Section, Subsection, Tabularx, MultiColumn, MultiRow
 from pylatex.utils import NoEscape
 
-
+_sum = ctypes.CDLL('libsum.so')
+_sum.checkForUpdates.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+# sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* season, char* date, int type
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
