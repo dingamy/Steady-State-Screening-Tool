@@ -714,7 +714,20 @@ void repopulateTables(sqlite3* db) {
     //populateBranchTables(db, THERMALBRANCH_FOLDER);
     //populateTransformer2Tables(db, THERMAL2_FOLDER);
 }
-void updateTables(sqlite3* db) {
+void updateTables() {
+
+    char* file = "database2.db";
+    sqlite3* db = NULL;
+    int rc = 0;
+    sqlite3_initialize();
+    rc = sqlite3_open_v2(file, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+
+    if (rc != SQLITE_OK) {
+        handle_error(db, "Cannot open database");
+    }
+    const char* message = "world";
+    fprintf(stderr, "hello: %s\n", message);
+
     sqlite3_stmt* stmt = NULL;
 	char* sql_str = "SELECT `Date Last Modified` FROM `Bus Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
 	prepareStatement(db, sql_str, &stmt);
@@ -750,7 +763,7 @@ int main(int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
         handle_error(db, "Cannot open database");     
     }
-    repopulateTables(db);
+    //repopulateTables(db);
     //updateTables(db);
 	sqlite3_close(db);
 	return 0;

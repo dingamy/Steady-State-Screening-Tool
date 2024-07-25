@@ -5,9 +5,7 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from pylatex import Document, Section, Subsection, Tabularx, MultiColumn, MultiRow
 from pylatex.utils import NoEscape
 
-_sum = ctypes.CDLL('libsum.so')
-_sum.checkForUpdates.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
-# sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* season, char* date, int type
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -286,6 +284,13 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    lib_path = os.path.join(os.path.dirname(__file__), 'libfun.so')
+    _check = ctypes.CDLL(lib_path)
+    _check.updateTables.argtypes = []
+    _check.updateTables.restype = None
+    print("hello")
+    _check.updateTables()
+
     app = QApplication(sys.argv)
     w = MainWindow()
     w.show()
