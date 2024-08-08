@@ -11,7 +11,8 @@ char* VOLTAGE_FOLDER = "./VoltageEEEE";
 char* THERMALBRANCH_FOLDER = "./ThermalBranchHHHh";
 char* THERMAL2_FOLDER = "./thermal2winding";
 char* THERMAL3_FOLDER = "./3-winding";
-
+char* GENERATOR_FOLDER = "./generator";
+char* OOS_FOLDER = "./oos";
 void handle_error(sqlite3* db, const char* msg) {
     fprintf(stderr, "%s: %s\n", msg, sqlite3_errmsg(db));
     sqlite3_close(db);
@@ -391,6 +392,146 @@ void processT3File(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* sc
 
     }
 }
+void processGeneratorFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* date) {
+    char line[1024];
+    while (fgets(line, 1024, file) != NULL) {
+		char* facility_name = strtok(line, ",");
+		char* bus_number = strtok(NULL, ",");
+		char* gen_id = strtok(NULL, ",");
+		char* gen_owner = strtok(NULL, ",");
+		char* bus_basekv = strtok(NULL, ",");
+		char* criteria_nlo = strtok(NULL, ",");
+		char* criteria_nhi = strtok(NULL, ",");
+		char* criteria_elo = strtok(NULL, ",");
+		char* criteria_ehi = strtok(NULL, ",");
+		char* pmin = strtok(NULL, ",");
+		char* pmax = strtok(NULL, ",");
+		char* qmin = strtok(NULL, ",");
+		char* qmax = strtok(NULL, ",");
+		char* remote_bus = strtok(NULL, ",");
+		char* scheduled_voltage = strtok(NULL, ",");
+		char* stat = strtok(NULL, ",");
+		char* pout = strtok(NULL, ",");
+		char* qout = strtok(NULL, ",");
+		char* terminal_voltage = strtok(NULL, ",");
+		char* remote_voltage = strtok(NULL, ",");
+		char* violation = strtok(NULL, ",");
+		char* exception = strtok(NULL, ",");
+
+		sqlite3_bind_int(statements[0], 1, atoi(bus_number));
+		sqlite3_bind_text(statements[0], 2, gen_id, -1, SQLITE_STATIC);
+		sqlite3_bind_text(statements[0], 3, facility_name, -1, SQLITE_STATIC); // facility name temporarily inputted as bus name as we figure out naming convention
+		sqlite3_bind_int(statements[0], 4, atoi(gen_owner));
+		sqlite3_bind_double(statements[0], 5, atof(bus_basekv));
+		sqlite3_bind_double(statements[0], 6, atof(criteria_nlo));
+		sqlite3_bind_double(statements[0], 7, atof(criteria_nhi));
+		sqlite3_bind_double(statements[0], 8, atof(criteria_elo));
+		sqlite3_bind_double(statements[0], 9, atof(criteria_ehi));
+		sqlite3_bind_double(statements[0], 10, atof(pmin));
+		sqlite3_bind_double(statements[0], 11, atof(pmax));
+		sqlite3_bind_double(statements[0], 12, atof(qmin));
+		sqlite3_bind_double(statements[0], 13, atof(qmax));
+		sqlite3_bind_int(statements[0], 14, atoi(remote_bus));
+		stepStatement(db, statements[0]);
+
+		sqlite3_bind_text(statements[1], 1, scenario, -1, SQLITE_STATIC);
+		sqlite3_bind_text(statements[1], 2, contingency, -1, SQLITE_STATIC);
+		sqlite3_bind_int(statements[1], 3, atoi(bus_number));
+		sqlite3_bind_text(statements[1], 4, gen_id, -1, SQLITE_STATIC);
+        sqlite3_bind_double(statements[1], 5, atof(stat));
+        sqlite3_bind_double(statements[1], 6, atof(scheduled_voltage));
+        sqlite3_bind_double(statements[1], 7, atof(terminal_voltage));
+		sqlite3_bind_double(statements[1], 8, atof(remote_voltage));
+		sqlite3_bind_double(statements[1], 9, atof(pout));
+		sqlite3_bind_double(statements[1], 10, atof(qout));
+		sqlite3_bind_int(statements[1], 11, (strncmp(violation, "Fail", 4) == 0 || atoi(violation) == 1) ? 1 : 0);
+		sqlite3_bind_int(statements[1], 12, exception ? atoi(exception) : 0);
+		sqlite3_bind_text(statements[1], 13, date, -1, SQLITE_STATIC);
+		stepStatement(db, statements[1]);
+
+        for (int i = 0; i < 2; i++) {
+            sqlite3_reset(statements[i]);
+            sqlite3_clear_bindings(statements[i]);
+        }
+    }
+}
+void processOOSFile(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* date) {
+    char line[1024];
+    while (fgets(line, 1024, file) != NULL) {
+		char* oos_name = strtok(line, ",");
+		char* monitor_bus = strtok(NULL, ",");
+		char* other_bus = strtok(NULL, ",");
+		char* cktid = strtok(NULL, ",");
+		char* remote_end = strtok(NULL, ",");
+		char* oos_model = strtok(NULL, ",");
+		char* data_in1 = strtok(NULL, ",");
+		char* data_in2 = strtok(NULL, ",");
+		char* data_in3 = strtok(NULL, ",");
+		char* data_in4 = strtok(NULL, ",");
+		char* data_in5 = strtok(NULL, ",");
+		char* data_in6 = strtok(NULL, ",");
+		char* data_out1 = strtok(NULL, ",");
+		char* data_out2 = strtok(NULL, ",");
+		char* data_out3 = strtok(NULL, ",");
+		char* data_out4 = strtok(NULL, ",");
+		char* data_out5 = strtok(NULL, ",");
+		char* data_out6 = strtok(NULL, ",");
+		char* criteria_in_pre = strtok(NULL, ",");
+		char* criteria_out_pre = strtok(NULL, ",");
+		char* criteria_in_post = strtok(NULL, ",");
+		char* criteria_out_post = strtok(NULL, ",");
+		char* stat = strtok(NULL, ",");
+		char* oos_r = strtok(NULL, ",");
+		char* oos_x = strtok(NULL, ",");
+		char* angle_monitored = strtok(NULL, ",");
+		char* angle_remote = strtok(NULL, ",");
+		char* margin = strtok(NULL, ",");
+		char* violate = strtok(NULL, ",");
+		char* exception = strtok(NULL, ",");
+
+		sqlite3_bind_text(statements[0], 1, oos_name, -1, SQLITE_STATIC);
+		sqlite3_bind_int(statements[0], 2, atoi(monitor_bus));
+		sqlite3_bind_int(statements[0], 3, atoi(other_bus));
+		sqlite3_bind_text(statements[0], 4, cktid, -1, SQLITE_STATIC);
+        sqlite3_bind_text(statements[0], 5, oos_model, -1, SQLITE_STATIC);
+		sqlite3_bind_double(statements[0], 6, atof(data_in1));
+		sqlite3_bind_double(statements[0], 7, atof(data_in2));
+		sqlite3_bind_double(statements[0], 8, atof(data_in3));
+		sqlite3_bind_double(statements[0], 9, atof(data_in4));
+		sqlite3_bind_double(statements[0], 10, atof(data_in5));
+		sqlite3_bind_double(statements[0], 11, atof(data_in6));
+		sqlite3_bind_double(statements[0], 12, atof(data_out1));
+		sqlite3_bind_double(statements[0], 13, atof(data_out2));
+		sqlite3_bind_double(statements[0], 14, atof(data_out3));
+		sqlite3_bind_double(statements[0], 15, atof(data_out4));
+		sqlite3_bind_double(statements[0], 16, atof(data_out5));
+		sqlite3_bind_double(statements[0], 17, atof(data_out6));
+		sqlite3_bind_double(statements[0], 18, atof(criteria_in_pre));
+		sqlite3_bind_double(statements[0], 19, atof(criteria_out_pre));
+		sqlite3_bind_double(statements[0], 20, atof(criteria_in_post));
+		sqlite3_bind_double(statements[0], 21, atof(criteria_out_post));
+		stepStatement(db, statements[0]);
+
+		sqlite3_bind_text(statements[1], 1, scenario, -1, SQLITE_STATIC);
+		sqlite3_bind_text(statements[1], 2, contingency, -1, SQLITE_STATIC);
+		sqlite3_bind_text(statements[1], 3, oos_name, -1, SQLITE_STATIC);
+		sqlite3_bind_double(statements[1], 4, atof(stat));
+		sqlite3_bind_double(statements[1], 5, atof(oos_r));
+		sqlite3_bind_double(statements[1], 6, atof(oos_x));
+		sqlite3_bind_double(statements[1], 7, atof(angle_monitored));
+		sqlite3_bind_double(statements[1], 8, atof(angle_remote));
+		sqlite3_bind_double(statements[1], 9, atof(margin));
+		sqlite3_bind_int(statements[1], 10, (strncmp(violate, "Fail", 4) == 0 || atoi(violate) == 1) ? 1 : 0);
+		sqlite3_bind_int(statements[1], 11, exception ? atoi(exception) : 0);
+		sqlite3_bind_text(statements[1], 12, date, -1, SQLITE_STATIC);
+		stepStatement(db, statements[1]);
+
+        for (int i = 0; i < 2; i++) {
+            sqlite3_reset(statements[i]);
+            sqlite3_clear_bindings(statements[i]);
+        }
+    }
+}
 void checkForUpdates(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* scenario, char* contingency, char* season, char* date, int type) {
     sqlite3_bind_text(statements[0], 1, scenario, -1, SQLITE_STATIC);
     sqlite3_bind_text(statements[0], 2, contingency, -1, SQLITE_STATIC);
@@ -509,6 +650,14 @@ void processFile(sqlite3* db, char*path, char* filename, sqlite3_stmt* statement
 	else if (type == 3) { // transformer3 table
     	printf("t3 table\n");
     	processT3File(db, file, statements, scenario, contingency, date);
+    }
+	else if (type == 4) { // populate generator table
+		printf("generator table\n");
+        processGeneratorFile(db, file, statements, scenario, contingency, date);
+    }
+    else if (type == 5) { // populate oos table
+		printf("oos table\n");
+        processOOSFile(db, file, statements, scenario, contingency, date);
     }
     else if (type > 9) { // checks for updated files
 		printf("check for updated files\n");
@@ -792,7 +941,35 @@ void populateTransformer3Tables(sqlite3* db, char* path) {
 		sqlite3_finalize(statements[i]);
 	}
 }
+void populateGeneratorTables(sqlite3* db, char* path) {
+    sqlite3_stmt* stmt = NULL;
+	sqlite3_stmt* stmt2 = NULL;
+    char* sql_str = "INSERT OR IGNORE INTO Generator (`Bus Number`, `Gen ID`, `Bus Name`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`, `Pmin`, `Pmax`, `Qmin`, `Qmax`, `Remote Bus`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	prepareStatement(db, sql_str, &stmt);
+    char* sql_str2 = "INSERT OR IGNORE INTO `Generator Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `Gen ID`, `stat`, `Scheduled Voltage`, `Terminal Voltage`, `Remote Voltage`, `Pout`, `Qout`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	prepareStatement(db, sql_str2, &stmt2);
+	sqlite3_stmt* statements[] = { stmt, stmt2 };
+	traverseDirectory(db, path, statements, 4);
+	for (int i = 0; i < 2; i++) {
+		sqlite3_finalize(statements[i]);
+	}
+}
+void populateOOSTables(sqlite3* db, char* path) {
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_stmt* stmt2 = NULL;
+    char* sql_str = "INSERT OR IGNORE INTO OOS (`OOS Name`, `Monitor Bus`, `Other Bus`, `cktID`, `OOS mode`, `Data In1`, `Data In2`, `Data In3`, `Data In4`, `Data In5`, `Data In6`, `Data out1`, `Data out2`, `Data out3`, `Data out4`, `Data out5`, `Data out6`, `Crit-in-pre`, `Crit-out-pre`, `Crit-in-post`, `Crit-out-post`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	prepareStatement(db, sql_str, &stmt);
+    char* sql_str2 = "INSERT OR IGNORE INTO `OOS Simulation Results` (`Scenario Name`, `Contingency Name`, `OOS Name`, `stat`, `oos_r`, `oos_x`, `Angle_monitored`, `Angle_remote`, `Margin`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	prepareStatement(db, sql_str2, &stmt2);
+    printf("bai\n");
+	sqlite3_stmt* statements[] = { stmt, stmt2 };
+	traverseDirectory(db, path, statements, 5);
+	for (int i = 0; i < 2; i++) {
+		sqlite3_finalize(statements[i]);
+	}
+}
 void repopulateTables(sqlite3* db) {
+	printf("haihai\n");
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
         "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
@@ -812,11 +989,19 @@ void repopulateTables(sqlite3* db) {
         "CREATE TABLE `Transformer2 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `stat` INT, `p_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 1` FLOAT, `q_winding 2` FLOAT, `amp_winding 1` FLOAT, `amp_winding 2` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer2 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);",
         "DROP TABLE IF EXISTS `Transformer3`;",
         "CREATE TABLE Transformer3 (`amp_winding 2` FLOAT, `Xformer Name` TEXT PRIMARY KEY, `Winding 1` INT, `Winding 2` INT, `Winding 3` INT, `Xfmr ID` TEXT, `Winding 1 MVA Base` FLOAT, `Winding 2 MVA Base` FLOAT, `Winding 3 MVA Base` FLOAT, `Winding 1 nominal KV` FLOAT, `Winding 2 nominal KV` FLOAT, `Winding 3 nominal KV` FLOAT, `RateA Winding 1` FLOAT, `RateB Winding 1` FLOAT, `RateC Winding 1` FLOAT, `RateA Winding 2` FLOAT, `RateB Winding 2` Float, `RateC Winding 2` FLOAT, `RateA Winding 3` FLOAT, `RateB Winding 3` FLOAT, `RateC Winding 3` FLOAT, `Tap Limit min` FLOAT, `Tap Limit max` FLOAT, `Tap Steps` INT);",
-		"DROP TABLE IF EXISTS `Transformer3 Simulation Results`;",
-		"CREATE TABLE `Transformer3 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `W1 Status` INT, `W2 Status` INT, `W3 Status` INT, `p_winding 1` FLOAT, `q_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 2` FLOAT, `p_winding 3` FLOAT, `q_winding 3` FLOAT, `amp_winding 1` FLOAT, `amp_winding 2` FLOAT, `amp_winding 3` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer3 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
+        "DROP TABLE IF EXISTS `Transformer3 Simulation Results`;",
+        "CREATE TABLE `Transformer3 Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Xformer Name` TEXT, `W1 Status` INT, `W2 Status` INT, `W3 Status` INT, `p_winding 1` FLOAT, `q_winding 1` FLOAT, `p_winding 2` FLOAT, `q_winding 2` FLOAT, `p_winding 3` FLOAT, `q_winding 3` FLOAT, `amp_winding 1` FLOAT, `amp_winding 2` FLOAT, `amp_winding 3` FLOAT, `Tap 1 Ratio` FLOAT, `Tap 2 Ratio` FLOAT, `Winding 1 Angle` FLOAT, `ploss` FLOAT, `qloss` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Xformer Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Xformer Name`) REFERENCES Transformer3 (`Xformer Name`) ON DELETE CASCADE ON UPDATE CASCADE);",
+        "DROP TABLE IF EXISTS `Generator`;",
+        "CREATE TABLE `Generator` (`Bus Number` INT, `Gen ID` TEXT, `Bus Name` TEXT, `Owner` INT, `Voltage Base` FLOAT, `criteria_nlo` FLOAT, `criteria_nhi` FLOAT, `criteria_elo` FLOAT, `criteria_ehi` FLOAT, `Pmin` FLOAT, `Pmax` FLOAT, `Qmin` FLOAT, `Qmax` FLOAT, `Remote Bus` INT, PRIMARY KEY (`Bus Number`, `Gen ID`));",
+        "DROP TABLE IF EXISTS `Generator Simulation Results`;",
+        "CREATE TABLE `Generator Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `Bus Number` INT, `Gen ID` TEXT, `stat` FLOAT, `Scheduled Voltage` FLOAT, `Terminal Voltage` FLOAT, `Remote Voltage` FLOAT, `Pout` FLOAT NOT NULL, `Qout` FLOAT NOT NULL, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `Bus Number`, `Gen ID`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Bus Number`) REFERENCES Generator (`Bus Number`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Gen ID`) REFERENCES Generator (`Gen ID`) ON DELETE CASCADE ON UPDATE CASCADE);",
+        "DROP TABLE IF EXISTS `OOS`;", 
+        "CREATE TABLE `OOS` (`OOS Name` TEXT PRIMARY KEY, `Monitor Bus` INT, `Other Bus` INT, `cktID` TEXT, `OOS mode` TEXT, `Data In1` FLOAT, `Data In2` FLOAT, `Data In3` FLOAT, `Data In4` FLOAT, `Data In5` FLOAT, `Data In6` FLOAT, `Data out1` FLOAT, `Data out2` FLOAT, `Data out3` FLOAT, `Data out4` FLOAT, `Data out5` FLOAT, `Data out6` FLOAT, `Crit-in-pre` FLOAT, `Crit-out-pre` FLOAT, `Crit-in-post` FLOAT, `Crit-out-post` FLOAT);",
+		"DROP TABLE IF EXISTS `OOS Simulation Results`;",
+		"CREATE TABLE `OOS Simulation Results` (`Scenario Name` TEXT, `Contingency Name` TEXT, `OOS Name` TEXT, `stat` FLOAT, `oos_r` FLOAT, `oos_x` FLOAT, `Angle_monitored` FLOAT, `Angle_remote` FLOAT, `Margin` FLOAT, `violate` INT, `exception` INT, `Date Last Modified` TEXT, PRIMARY KEY (`Scenario Name`, `Contingency Name`, `OOS Name`), FOREIGN KEY (`Scenario Name`) REFERENCES Scenarios (`Scenario Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`Contingency Name`) REFERENCES Contingency (`Contingency Name`) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (`OOS Name`) REFERENCES OOS (`OOS Name`) ON DELETE CASCADE ON UPDATE CASCADE);"
     };
     sqlite3_stmt* stmt = NULL;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 28; i++) {
         stmt = NULL;
         prepareStatement(db, queries[i], &stmt);
 		stepStatement(db, stmt);
@@ -827,7 +1012,10 @@ void repopulateTables(sqlite3* db) {
     //populateBusTables(db, VOLTAGE_FOLDER);
     //populateBranchTables(db, THERMALBRANCH_FOLDER);
     //populateTransformer2Tables(db, THERMAL2_FOLDER);
-	populateTransformer3Tables(db, THERMAL3_FOLDER);
+	//populateTransformer3Tables(db, THERMAL3_FOLDER);
+	//populateGeneratorTables(db, GENERATOR_FOLDER);
+    populateOOSTables(db, OOS_FOLDER);
+
 }
 void updateTables() {
 
