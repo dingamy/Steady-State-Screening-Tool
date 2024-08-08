@@ -1,5 +1,5 @@
 import sys, os, pypandoc, sqlite3, ctypes
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem, QInputDialog
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QMessageBox, QSpacerItem, QSizePolicy, QTreeWidget, QTreeWidgetItem, QInputDialog, QFileDialog
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from pylatex import Document, Section, Subsection, Tabularx, MultiColumn, MultiRow
@@ -11,9 +11,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("<3 steady state screening tool ^w^")
         self.db = "database2.db"
-        self.contingency = "";
-        self.scenario = "";
-        self.season = "";
+        self.contingency = ""
+        self.scenario = ""
+        self.season = ""
         self.num_thermalbranch = 0
         self.num_voltage = 0
         self.num_trans2 = 0
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
 
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
-        self.resize(800,600)
+        self.resize(800,600) #resizes the window
 
         vlayout = QVBoxLayout()
         vlayout2 = QVBoxLayout()
@@ -103,7 +103,6 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
-        
     def add_data_to_combobox(self, combobox, column, table):
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
@@ -116,7 +115,6 @@ class MainWindow(QMainWindow):
             combobox.addItem(row[0])
         conn.commit()
         conn.close()
-
     def retrieve_data(self):
         self.contingency = self.contingency_cb.currentText();
         self.scenario = self.scenario_cb.currentText();
@@ -184,7 +182,6 @@ class MainWindow(QMainWindow):
         self.doc.generate_tex("tex")
         self.display_report("tex.tex")
         conn.close()
-
     def generate_report(self):
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
@@ -216,7 +213,6 @@ class MainWindow(QMainWindow):
                     self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored three winding transformers: 0", False)):
                 self.doc.append("No violations.")
-
     def create_table(self, table_name, data, index):
         columns = self.column_names[table_name]
         table_str = '| '
@@ -258,9 +254,7 @@ class MainWindow(QMainWindow):
                     data_row.append(data[i][temp])
                 table.add_row(data_row)
                 table.add_hline()
-            # | p{2cm} | p{4 cm} | p{1.58cm} | p{2.1cm} | p{2.1cm} | p{2.1cm} |' 
-            # p{2.51cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} | p{1.5cm} |'
-            
+
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
         with open("report.html", 'w') as f:
@@ -268,29 +262,33 @@ class MainWindow(QMainWindow):
         file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "report.html"))
         local_url = QUrl.fromLocalFile(file_path)
         self.webView.setUrl(local_url)
-
+        if os.path.exists(tex_file):
+            os.remove(tex_file)
     def save_report(self):
-        text, ok = QInputDialog.getText(self, 'Text Input Dialog', 'Enter your name:')
-        if ok:
-            self.doc.generate_pdf('report', clean_tex=False)
+        dialog = QInputDialog()
+        text, ok = dialog.getText(self, '>.<', 'Name file (required):')
+        dir= QFileDialog.getExistingDirectory(self, "Choose folder to save report in", ".")
+        if ok and dir:
+            path = dir + '/' + text
+            self.doc.generate_pdf(filepath=path, clean_tex=False)
+            if os.path.exists("report.html"):
+                os.remove("report.html")
             self.done_alert()
-       
     def done_alert(self):
         dialog = QMessageBox(self)
         dialog.setWindowTitle("=^.^=")
         dialog.setText("Report has been successfully generated!")
-        #delete tex.tex file
         dialog.exec();
 
-
 if __name__ == '__main__':
+    '''
     lib_path = os.path.join(os.path.dirname(__file__), 'libfun.so')
     _check = ctypes.CDLL(lib_path)
     _check.updateTables.argtypes = []
     _check.updateTables.restype = None
     print("hello")
     _check.updateTables()
-
+    '''
     app = QApplication(sys.argv)
     w = MainWindow()
     w.show()
