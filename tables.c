@@ -563,6 +563,15 @@ void checkForUpdates(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* 
             case 2:
 				table_name = "Transformer2";
 				break;
+            case 3:
+				table_name = "Transformer3";
+				break;
+			case 4:
+				table_name = "Generator";
+				break;
+			case 5:
+				table_name = "OOS";
+				break;
         }
 
         size_t needed = snprintf(NULL, 0, "DELETE FROM `%s Simulation Results` WHERE `Scenario Name` = '%s' and `Contingency Name` ='%s';", table_name, scenario, contingency) + 1;
@@ -607,6 +616,30 @@ void checkForUpdates(sqlite3* db, FILE* file, sqlite3_stmt* statements[], char* 
                 prepareStatement(db, sql_str2, &stmt2);
                 sqlite3_stmt* statements3[] = { stmt, stmt2 };
                 processT2File(db, file, statements3, scenario, contingency, date);
+                break;
+            case 3:
+                sql_str = "INSERT OR IGNORE INTO Transformer3 (`amp_winding 2`, `Xformer Name`, `Winding 1`, `Winding 2`, `Winding 3`, `Xfmr ID`, `Winding 1 MVA Base`, `Winding 2 MVA Base`, `Winding 3 MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `Winding 3 nominal KV`, `RateA Winding 1`, `RateB Winding 1`, `RateC Winding 1`, `RateA Winding 2`, `RateB Winding 2`, `RateC Winding 2`, `RateA Winding 3`, `RateB Winding 3`, `RateC Winding 3`) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+				prepareStatement(db, sql_str, &stmt);
+                sql_str2 = "INSERT OR IGNORE INTO `Transformer3 Simulation Results` (`Scenario Name`, `Contingency Name`, `Xformer Name`, `W1 Status`, `W2 Status`, `W3 Status`, `p_winding 1`, `q_winding 1`, `p_winding 2`, `q_winding 2`, `p_winding 3`, `q_winding 3`, `amp_winding 1`, `amp_winding 2`, `amp_winding 3`, `ploss`, `qloss`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+				prepareStatement(db, sql_str2, &stmt2);
+				sqlite3_stmt* statements4[] = { stmt, stmt2 };
+				processT3File(db, file, statements4, scenario, contingency, date);
+                break;
+            case 4: 
+                sql_str = "INSERT OR IGNORE INTO Generator (`Bus Number`, `Gen ID`, `Bus Name`, `Owner`, `Voltage Base`, `criteria_nlo`, `criteria_nhi`, `criteria_elo`, `criteria_ehi`, `Pmin`, `Pmax`, `Qmin`, `Qmax`, `Remote Bus`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                prepareStatement(db, sql_str, &stmt);
+                sql_str2 = "INSERT OR IGNORE INTO `Generator Simulation Results` (`Scenario Name`, `Contingency Name`, `Bus Number`, `Gen ID`, `stat`, `Scheduled Voltage`, `Terminal Voltage`, `Remote Voltage`, `Pout`, `Qout`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                prepareStatement(db, sql_str2, &stmt2);
+                sqlite3_stmt* statements5[] = { stmt, stmt2 };
+                processGeneratorFile(db, file, statements5, scenario, contingency, date);
+                break;
+            case 5:
+                sql_str = "INSERT OR IGNORE INTO OOS (`OOS Name`, `Monitor Bus`, `Other Bus`, `cktID`, `OOS mode`, `Data In1`, `Data In2`, `Data In3`, `Data In4`, `Data In5`, `Data In6`, `Data out1`, `Data out2`, `Data out3`, `Data out4`, `Data out5`, `Data out6`, `Crit-in-pre`, `Crit-out-pre`, `Crit-in-post`, `Crit-out-post`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                prepareStatement(db, sql_str, &stmt);
+                sql_str2 = "INSERT OR IGNORE INTO `OOS Simulation Results` (`Scenario Name`, `Contingency Name`, `OOS Name`, `stat`, `oos_r`, `oos_x`, `Angle_monitored`, `Angle_remote`, `Margin`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                prepareStatement(db, sql_str2, &stmt2);
+                sqlite3_stmt* statements6[] = { stmt, stmt2 };
+                processOOSFile(db, file, statements6, scenario, contingency, date);
                 break;
         }
 
@@ -1009,28 +1042,15 @@ void repopulateTables(sqlite3* db) {
     }
     
     populateScenCont(db, ".");
-    //populateBusTables(db, VOLTAGE_FOLDER);
-    //populateBranchTables(db, THERMALBRANCH_FOLDER);
-    //populateTransformer2Tables(db, THERMAL2_FOLDER);
-	//populateTransformer3Tables(db, THERMAL3_FOLDER);
-	//populateGeneratorTables(db, GENERATOR_FOLDER);
+    populateBusTables(db, VOLTAGE_FOLDER);
+    populateBranchTables(db, THERMALBRANCH_FOLDER);
+    populateTransformer2Tables(db, THERMAL2_FOLDER);
+	populateTransformer3Tables(db, THERMAL3_FOLDER);
+	populateGeneratorTables(db, GENERATOR_FOLDER);
     populateOOSTables(db, OOS_FOLDER);
 
 }
-void updateTables() {
-
-    char* file = "database2.db";
-    sqlite3* db = NULL;
-    int rc = 0;
-    sqlite3_initialize();
-    rc = sqlite3_open_v2(file, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-
-    if (rc != SQLITE_OK) {
-        handle_error(db, "Cannot open database");
-    }
-    const char* message = "world";
-    fprintf(stderr, "hello: %s\n", message);
-
+void updateTables(sqlite3* db) {
     sqlite3_stmt* stmt = NULL;
 	char* sql_str = "SELECT `Date Last Modified` FROM `Bus Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
 	prepareStatement(db, sql_str, &stmt);
@@ -1055,6 +1075,30 @@ void updateTables() {
     sqlite3_finalize(stmt);
     stmt = NULL;
 	printf("DONE CHECKING T2\n");
+
+	sql_str = "SELECT `Date Last Modified` FROM `Transformer3 Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
+	prepareStatement(db, sql_str, &stmt);
+	statements[0] = stmt;
+	traverseDirectory(db, THERMAL3_FOLDER, statements, 13);
+	sqlite3_finalize(stmt);
+	stmt = NULL;
+	printf("DONE CHECKING T3\n");
+
+    sql_str = "SELECT `Date Last Modified` FROM `Generator Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
+    prepareStatement(db, sql_str, &stmt);
+    statements[0] = stmt;
+    traverseDirectory(db, GENERATOR_FOLDER, statements, 14);
+    sqlite3_finalize(stmt);
+    stmt = NULL;
+    printf("DONE CHECKING T3\n");
+
+    sql_str = "SELECT `Date Last Modified` FROM `OOS Simulation Results` WHERE `Scenario Name` = ? and `Contingency Name` = ?;";
+    prepareStatement(db, sql_str, &stmt);
+    statements[0] = stmt;
+    traverseDirectory(db, OOS_FOLDER, statements, 15);
+    sqlite3_finalize(stmt);
+    stmt = NULL;
+    printf("DONE CHECKING T3\n");
 }
 int main(int argc, char* argv[]) {
     char* file = "database2.db";
@@ -1067,7 +1111,7 @@ int main(int argc, char* argv[]) {
         handle_error(db, "Cannot open database");     
     }
     repopulateTables(db);
-    //updateTables(db);
+    updateTables(db);
 	sqlite3_close(db);
 	return 0;
 }
