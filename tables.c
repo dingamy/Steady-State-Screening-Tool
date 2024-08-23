@@ -994,7 +994,6 @@ void populateOOSTables(sqlite3* db, char* path) {
 	prepareStatement(db, sql_str, &stmt);
     char* sql_str2 = "INSERT OR IGNORE INTO `OOS Simulation Results` (`Scenario Name`, `Contingency Name`, `OOS Name`, `stat`, `oos_r`, `oos_x`, `Angle_monitored`, `Angle_remote`, `Margin`, `violate`, `exception`, `Date Last Modified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 	prepareStatement(db, sql_str2, &stmt2);
-    printf("bai\n");
 	sqlite3_stmt* statements[] = { stmt, stmt2 };
 	traverseDirectory(db, path, statements, 5);
 	for (int i = 0; i < 2; i++) {
@@ -1002,7 +1001,6 @@ void populateOOSTables(sqlite3* db, char* path) {
 	}
 }
 void repopulateTables(sqlite3* db) {
-	printf("haihai\n");
     const char* queries[] = {
         "DROP TABLE IF EXISTS Scenarios;",
         "CREATE TABLE Scenarios (`Scenario Name` TEXT PRIMARY KEY, `Study` TEXT, Season TEXT, Year INT, Load FLOAT, Topology TEXT);",
@@ -1048,7 +1046,6 @@ void repopulateTables(sqlite3* db) {
 	populateTransformer3Tables(db, THERMAL3_FOLDER);
 	populateGeneratorTables(db, GENERATOR_FOLDER);
     populateOOSTables(db, OOS_FOLDER);
-
 }
 void updateTables(sqlite3* db) {
     sqlite3_stmt* stmt = NULL;
@@ -1110,7 +1107,7 @@ int main(int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
         handle_error(db, "Cannot open database");     
     }
-    repopulateTables(db);
+    //repopulateTables(db);
     updateTables(db);
 	sqlite3_close(db);
 	return 0;

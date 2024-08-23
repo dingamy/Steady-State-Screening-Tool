@@ -17,9 +17,16 @@ class MainWindow(QMainWindow):
         self.num_thermalbranch = 0
         self.num_voltage = 0
         self.num_trans2 = 0
+        self.num_trans3 = 0
+        self.num_generator = 0
+        self.num_oos = 0
         self.bus_data = []
         self.branch_data = []
         self.trans2_data = []
+        self.trans3_data = []
+        self.generator_data = []
+        self.oos_data = []
+
         self.column_names = {
             "Bus Voltage": ["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"],
             "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"],
@@ -177,6 +184,48 @@ class MainWindow(QMainWindow):
         cursor.execute(query)
         self.num_trans2 = cursor.fetchall()[0][0]
 
+        # TRANSFORMER 3 TABLES
+        query = f"SELECT `Xformer Name`, `amp_winding 1`, `amp_winding 2`, `amp_winding 3` FROM `Transformer3 Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
+        cursor.execute(query)
+        self.trans3_data = cursor.fetchall()
+        for i in range(len(self.trans3_data)):
+            query = f"SELECT `Winding 1`, `Winding 2`, `Winding 3`, `Xfmr ID`, `Winding 1 MVA Base`,  `Winding 2 MVA Base`,  `Winding 3 MVA Base`, `Winding 1 nominal KV`, `Winding 2 nominal KV`, `Winding 3 nominal KV`, `RateA Winding 1`, `RateA Winding 2`, `RateA Winding 3` FROM `Transformer3` WHERE `Xformer Name` = \"{self.trans3_data[i][0]}\";"
+            cursor.execute(query)
+            trans3_result_part = cursor.fetchall()
+            rounded_trans3_result_part = (trans3_result_part[0][0], trans3_result_part[0][1], trans3_result_part[0][2], trans3_result_part[0][3], round(trans3_result_part[0][4], 2), round(trans3_result_part[0][5], 2), round(trans3_result_part[0][6], 2), round(trans3_result_part[0][7], 2), round(trans3_result_part[0][8], 2), round(trans3_result_part[0][9], 2), round(trans3_result_part[0][10], 2), round(trans3_result_part[0][11], 2), round(trans3_result_part[0][12], 2))
+            self.trans3_data[i] = (self.trans3_data[i][0], round(self.trans3_data[i][1], 2), round(self.trans3_data[i][2], 2), round(self.trans3_data[i][3], 2))
+            self.trans3_data[i] += rounded_trans3_result_part
+        query = f"SELECT COUNT(`Xformer Name`) FROM `Transformer3`;"
+        cursor.execute(query)
+        self.num_trans3 = cursor.fetchall()[0][0]
+
+        # GENERATOR TABLES
+        query = f"SELECT `Bus Number`, `Gen ID` FROM `Generator Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
+        cursor.execute(query)
+        self.generator_data = cursor.fetchall()
+        for i in range(len(self.generator_data)):
+            query = f"SELECT `Bus Name`, `Voltage Base`, `criteria_nlo`, `criteria_nhi` FROM Generator WHERE `Bus Number` = \"{self.generator_data[i][0]}\";"
+            cursor.execute(query)
+            generator_result_part = cursor.fetchall()
+            rounded_generator_result_part = (generator_result_part[0][0], round(generator_result_part[0][1], 2), round(generator_result_part[0][2], 2), round(generator_result_part[0][3], 2))
+            self.generator_data[i] += rounded_generator_result_part
+        query = f"SELECT COUNT(`Bus Number`) FROM `Generator`;"
+        cursor.execute(query)
+        self.num_generator = cursor.fetchall()[0][0]
+
+        # OOS TABLES
+        query = f"SELECT `OOS Name`, `Angle_monitored`, `Angle_remote` FROM `OOS Simulation Results` WHERE `Scenario Name` = \"{self.scenario}\" and `Contingency Name` = \"{self.contingency}\" and violate = 1 and exception = 0;"
+        cursor.execute(query)
+        self.oos_data = cursor.fetchall()
+        for i in range(len(self.oos_data)):
+            query = f"SELECT `Monitor Bus`, `Other Bus`, `cktID`, `OOS mode` FROM `OOS` WHERE `OOS Name` = \"{self.oos_data[i][0]}\";"
+            cursor.execute(query)
+            oos_result_part = cursor.fetchall()
+            self.oos_data[i] = (self.oos_data[i][0], round(self.oos_data[i][1], 2), round(self.oos_data[i][2], 2))
+            self.oos_data[i] += oos_result_part[0]
+        query = f"SELECT COUNT(`OOS Name`) FROM `OOS`;"
+        cursor.execute(query)
+        self.num_oos = cursor.fetchall()[0][0]
 
         self.generate_report()
         self.doc.generate_tex("tex")
@@ -254,7 +303,6 @@ class MainWindow(QMainWindow):
                     data_row.append(data[i][temp])
                 table.add_row(data_row)
                 table.add_hline()
-
     def display_report(self, tex_file):
         output = pypandoc.convert_file(tex_file, 'html', format='latex')
         with open("report.html", 'w') as f:
