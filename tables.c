@@ -7,12 +7,12 @@
 #include <sys/stat.h>
 #include <io.h>
 #include <time.h>
-char* VOLTAGE_FOLDER = "./VoltageEEEE";
-char* THERMALBRANCH_FOLDER = "./ThermalBranchHHHh";
-char* THERMAL2_FOLDER = "./thermal2winding";
-char* THERMAL3_FOLDER = "./3-winding";
-char* GENERATOR_FOLDER = "./generator";
-char* OOS_FOLDER = "./oos";
+char* VOLTAGE_FOLDER = "./Data File Examples/Voltage File Examples";
+char* THERMALBRANCH_FOLDER = "./Data File Examples/ThermalBranch File Examples";
+char* THERMAL2_FOLDER = "./Data File Examples/2-Winding Transformer File Examples";
+char* THERMAL3_FOLDER = "./Data File Examples/3-Winding Transformer File Examples";
+char* GENERATOR_FOLDER = "./Data File Examples/Generator File Examples";
+char* OOS_FOLDER = "./Data File Examples/OOS File Examples";
 void handle_error(sqlite3* db, const char* msg) {
     fprintf(stderr, "%s: %s\n", msg, sqlite3_errmsg(db));
     sqlite3_close(db);
@@ -1098,7 +1098,7 @@ void updateTables(sqlite3* db) {
     printf("DONE CHECKING T3\n");
 }
 int main(int argc, char* argv[]) {
-    char* file = "database2.db";
+    char* file = "database.db";
     sqlite3* db = NULL;
     int rc = 0;
     sqlite3_initialize();
@@ -1107,8 +1107,8 @@ int main(int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
         handle_error(db, "Cannot open database");     
     }
-    //repopulateTables(db);
-    updateTables(db);
+    repopulateTables(db);
+    //updateTables(db);
 	sqlite3_close(db);
 	return 0;
 }

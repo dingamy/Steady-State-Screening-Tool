@@ -1,0 +1,92 @@
+\documentclass{article}%
+\usepackage[T1]{fontenc}%
+\usepackage[utf8]{inputenc}%
+\usepackage{lmodern}%
+\usepackage{textcomp}%
+\usepackage{lastpage}%
+\usepackage{geometry}%
+\geometry{margin=2.54cm}%
+\usepackage{tabularx}%
+%
+\title{Steady State Contingency Analysis Report\vspace{-3ex}}%
+\date{Report generated: \today\vspace{-2ex}}%
+%
+\begin{document}%
+\normalsize%
+\maketitle%
+\section*{Contingency: BRNDSHUNT}%
+\label{sec:ContingencyBRNDSHUNT}%
+\subsection*{Total number of MVar margin criiteria screened: 0}%
+\label{subsec:TotalnumberofMVarmargincriiteriascreened0}%
+No violations.
+
+%
+\subsection*{Total number of monitored buses: 457}%
+\label{subsec:Totalnumberofmonitoredbuses457}%
+No violations.
+
+%
+\subsection*{Total number of monitored generators: 225}%
+\label{subsec:Totalnumberofmonitoredgenerators225}%
+No violations.
+
+%
+\subsection*{Total number of OOS margin criteria screened: 5}%
+\label{subsec:TotalnumberofOOSmargincriteriascreened5}%
+\begin{tabularx}{\textwidth}{|  X |p{1.5cm} | X | X | X | X | X |}%
+\hline%
+\multicolumn{7}{|c|}{OOS Violations}\\%
+\hline%
+OOS Name&Angle monitored&Angle remote&Monitor Bus&Other Bus&cktID&OOS mode\\%
+\hline%
+D604I&{-}27.25&{-}22.21&608423&608412&1&SLNOS\\%
+\hline%
+\end{tabularx}
+
+%
+\subsection*{Total number of monitored branches: 555}%
+\label{subsec:Totalnumberofmonitoredbranches555}%
+No violations.
+
+%
+\subsection*{Total number of monitored two winding transformers: 460}%
+\label{subsec:Totalnumberofmonitoredtwowindingtransformers460}%
+\begin{tabularx}{\textwidth}{| p{1.7cm} | X | X |p{0.3cm} | X | X | X | X | X | X | X |}%
+\hline%
+\multicolumn{11}{|c|}{Two Winding Transformer Thermal Violations}\\%
+\hline%
+Transformer Name&\multicolumn{2}{|c|}{Bus Number}&ID&Base (MVA)&\multicolumn{3}{|c|}{Winding 1}&\multicolumn{3}{|c|}{Winding 2}\\%
+\cline{2%
+-%
+3}%
+\cline{6%
+-%
+11}%
+&Winding 1&Winding 2&&&Voltage (kV)&Rating (Amps)&Loading (Amps)&Voltage (kV)&Rating (Amps)&Loading (Amps)\\%
+\hline%
+BANK 42&667014&667231&42&100.0&230.0&418.96&396.09&138.0&698.26&660.15\\%
+\hline%
+\hline%
+BANK 43&667013&667231&43&100.0&230.0&418.96&392.59&138.0&698.26&654.32\\%
+\hline%
+\hline%
+T2\_25&667006&669711&2&120.0&230.0&401.63&327.12&13.8&6693.92&5588.21\\%
+\hline%
+\hline%
+T6\_12&667009&669725&6&100.0&230.0&326.08&242.86&13.8&5434.62&4250.0\\%
+\hline%
+\hline%
+T8\_3&667003&669717&8&120.0&230.0&401.63&327.2&13.8&6693.92&5589.7\\%
+\hline%
+\hline%
+T8\_4&667008&669727&8&100.0&230.0&326.08&242.89&13.8&5434.62&4250.53\\%
+\hline%
+\end{tabularx}
+
+%
+\subsection*{Total number of monitored three winding transformers: 24}%
+\label{subsec:Totalnumberofmonitoredthreewindingtransformers24}%
+No violations.
+
+%
+\end{document}

@@ -10,7 +10,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("<3 steady state screening tool ^w^")
-        self.db = "database2.db"
+        self.db = "database.db"
         self.contingency = ""
         self.scenario = ""
         self.season = ""
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
             "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"],
             "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"],
             "Generator": ["Bus Number", "Bus Name", "Gen ID", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)"],
-            "OOS": ["OOS Name", "Angle_monitored", "Angle_remote", "Monitor Bus", "Other Bus", "cktID", "OOS mode"],
+            "OOS": ["OOS Name", "Angle monitored", "Angle remote", "Monitor Bus", "Other Bus", "cktID", "OOS mode"],
             "Three Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "Winding 3", "ID", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
         }
         self.bus_table_index = {
@@ -85,8 +85,8 @@ class MainWindow(QMainWindow):
 
         self.oos_table_index = {
             "OOS Name": 0,
-            "Angle_monitored": 1,
-            "Angle_remote": 2,
+            "Angle monitored": 1,
+            "Angle remote": 2,
             "Monitor Bus": 3,
             "Other Bus": 4,
             "cktID": 5,
@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
         self.doc.preamble.append(NoEscape(r'\date{Report generated: \today\vspace{-2ex}}'))
         self.doc.append(NoEscape(r'\maketitle'))
 
-        with self.doc.create(Section(f"Contingency: {self.contingency} (Islands created: ?)", False)):
+        with self.doc.create(Section(f"Contingency: {self.contingency}", False)):
             with self.doc.create(Subsection(f"Total number of MVar margin criiteria screened: 0", False)):
                 self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored buses: {self.num_voltage}", False)):
@@ -282,7 +282,6 @@ class MainWindow(QMainWindow):
                     self.create_table("Generator", self.generator_data, self.generator_table_index)
                 else:
                     self.doc.append("No violations.")
-                self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of OOS margin criteria screened: {self.num_oos}", False)):
                 if (len(self.oos_data) != 0):
                     self.create_table("OOS", self.oos_data, self.oos_table_index)
@@ -315,6 +314,8 @@ class MainWindow(QMainWindow):
                 table_str += 'p{1.7cm} |'
             elif columns[i] == "ID":
                 table_str += 'p{0.3cm} |'
+            elif columns[i] == "Angle monitored":
+                table_str += 'p{1.5cm} |'
             else:
                 table_str += ' X |'
         
