@@ -1,9 +1,8 @@
-#include "sqlite-amalgamation-3450300/sqlite3.h"
-// HELLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+#include "Misc/sqlite-amalgamation-3450300/sqlite3.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
+#include "Misc/include/dirent.h"
 #include <sys/stat.h>
 #include <io.h>
 #include <time.h>
