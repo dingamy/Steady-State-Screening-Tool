@@ -30,7 +30,10 @@ class MainWindow(QMainWindow):
         self.column_names = {
             "Bus Voltage": ["Bus Number", "Bus Name", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)", "Bus Voltage (pu)"],
             "Branch Thermal": ["Branch Name", "Metered End", "Other End", "Branch ID", "Voltage Class (kV)", "Rating (Amps)", "Metered End Loading (Amps)", "Other End Loading (Amps)"],
-            "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
+            "Two Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "ID", "Base (MVA)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"],
+            "Generator": ["Bus Number", "Bus Name", "Gen ID", "Bus Base (kV)", "Low Voltage Criteria (pu)", "High Voltage Critera (pu)"],
+            "OOS": ["OOS Name", "Angle_monitored", "Angle_remote", "Monitor Bus", "Other Bus", "cktID", "OOS mode"],
+            "Three Winding Transformer Thermal": ["Transformer Name", "Winding 1", "Winding 2", "Winding 3", "ID", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)", "Voltage (kV)", "Rating (Amps)", "Loading (Amps)"]
         }
         self.bus_table_index = {
             "Bus Number": 0,
@@ -60,7 +63,35 @@ class MainWindow(QMainWindow):
             "Rating (Amps)": [9, 10],
             "Loading (Amps)": [1, 2]
         }
+        self.trans3_table_index = {
+            "Transformer Name": 0,
+            "Winding 1": 4,
+            "Winding 2": 5,
+            "Winding 3": 6,
+            "ID": 7,
+            "Voltage (kV)": [8, 9, 10],
+            "Rating (Amps)": [14, 15, 16],
+            "Loading (Amps)": [1, 2, 3]
+        }
 
+        self.generator_table_index = {
+            "Bus Number": 0,
+            "Bus Name": 2,
+            "Gen ID": 1,
+            "Bus Base (kV)": 3,
+            "Low Voltage Criteria (pu)": 4,
+            "High Voltage Critera (pu)": 5
+        }
+
+        self.oos_table_index = {
+            "OOS Name": 0,
+            "Angle_monitored": 1,
+            "Angle_remote": 2,
+            "Monitor Bus": 3,
+            "Other Bus": 4,
+            "cktID": 5,
+            "OOS mode": 6
+        }
         geometry_options = {"margin": "2.54cm"}
         self.doc = Document(geometry_options=geometry_options)
         self.resize(800,600) #resizes the window
@@ -246,10 +277,17 @@ class MainWindow(QMainWindow):
                     self.create_table("Bus Voltage", self.bus_data, self.bus_table_index)
                 else:
                     self.doc.append("No violations.")
-            with self.doc.create(Subsection(f"Total number of monitored generators: 0", False)):
+            with self.doc.create(Subsection(f"Total number of monitored generators: {self.num_generator}", False)):
+                if (len(self.generator_data) != 0):
+                    self.create_table("Generator", self.generator_data, self.generator_table_index)
+                else:
+                    self.doc.append("No violations.")
                 self.doc.append("No violations.")
-            with self.doc.create(Subsection(f"Total number of OOS margin criteria screened: 0", False)):
-                self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of OOS margin criteria screened: {self.num_oos}", False)):
+                if (len(self.oos_data) != 0):
+                    self.create_table("OOS", self.oos_data, self.oos_table_index)
+                else:
+                    self.doc.append("No violations.")
             with self.doc.create(Subsection(f"Total number of monitored branches: {self.num_thermalbranch}", False)):
                 if (len(self.branch_data) != 0):
                     self.create_table("Branch Thermal", self.branch_data, self.branch_table_index)
@@ -260,8 +298,11 @@ class MainWindow(QMainWindow):
                     self.create_table("Two Winding Transformer Thermal", self.trans2_data, self.trans2_table_index)
                 else:
                     self.doc.append("No violations.")
-            with self.doc.create(Subsection(f"Total number of monitored three winding transformers: 0", False)):
-                self.doc.append("No violations.")
+            with self.doc.create(Subsection(f"Total number of monitored three winding transformers: {self.num_trans3}", False)):
+                if (len(self.trans3_data) != 0):
+                    self.create_table("Three Winding Transformer Thermal", self.trans3_data, self.trans3_table_index)
+                else:
+                    self.doc.append("No violations.")
     def create_table(self, table_name, data, index):
         columns = self.column_names[table_name]
         table_str = '| '
@@ -276,6 +317,7 @@ class MainWindow(QMainWindow):
                 table_str += 'p{0.3cm} |'
             else:
                 table_str += ' X |'
+        
         with self.doc.create(Tabularx(table_str)) as table:
             table.add_hline()
             table.add_row([MultiColumn(len(columns), align='|c|', data=f"{table_name} Violations")])
@@ -287,6 +329,13 @@ class MainWindow(QMainWindow):
                 table.add_hline(2, 3)
                 table.add_hline(6, 11)
                 table.add_row(["", "Winding 1", "Winding 2", "", "", columns[5], columns[6], columns[7], columns[5], columns[6], columns[7]])
+            elif table_name == "Three Winding Transformer Thermal":
+                table.add_row([
+					"Transformer Name", MultiColumn(3, align='|c|', data="Bus Number"), "ID", MultiColumn(3, align='|c|', data="Winding 1"), MultiColumn(3, align='|c|', data="Winding 2"), MultiColumn(3, align='|c|', data="Winding 3")
+				])
+                table.add_hline(2, 4)
+                table.add_hline(7, 14)
+                table.add_row(["", "Winding 1", "Winding 2", "Winding 3", "", columns[5], columns[6], columns[7], columns[8], columns[9], columns[10], columns[11], columns[12], columns[13]])
             else:
                 table.add_row(columns)
             
@@ -298,6 +347,12 @@ class MainWindow(QMainWindow):
                     if isinstance(temp, list):
                         if j > 7 and table_name == "Two Winding Transformer Thermal":
                             temp = index[columns[j]][1]
+                        elif j > 10 and table_name == "Three Winding Transformer Thermal":
+                            temp = index[columns[j]][2]
+                        elif j > 7 and table_name == "Three Winding Transformer Thermal":
+                            temp = index[columns[j]][1]
+                        elif j > 4 and table_name == "Three Winding Transformer Thermal":
+                            temp = index[columns[j]][0]
                         else:
                             temp = index[columns[j]][0]
                     data_row.append(data[i][temp])
